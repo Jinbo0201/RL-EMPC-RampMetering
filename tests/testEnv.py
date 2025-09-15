@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
-from metanetGym.metanetEnv import MetanetEnv
 import pandas as pd
 import seaborn as sns
+from src.simulation.metanetEnv import MetanetEnv
 
 if __name__ == "__main__":
     env = MetanetEnv()
