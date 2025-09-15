@@ -2,6 +2,7 @@ import gym
 from gym import spaces
 import math
 from src.simulation.input import Input
+from src.config.constants import *
 
 
 class MetanetEnv(gym.Env):
