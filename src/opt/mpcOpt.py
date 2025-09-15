@@ -1,6 +1,6 @@
-from metanetGym.modelPyomo import *
-from metanetGym.input import *
-from metanetGym.metanetEnv import *
+# from metanetGym.modelPyomo import *
+from src.simulation.input import Input
+from src.simulation.metanetEnv import MetanetEnv
 import matplotlib.pyplot as plt
 
 
