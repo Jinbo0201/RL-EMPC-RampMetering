@@ -165,11 +165,6 @@ class Metanet(object):
                            self.DENSITY_MAX - self.DENSITY_CRIT),
                    self.action[0] * self.CAPACITY_ORIGIN)
 
-    # def _get_flow_onramp_min(self):
-    #     value = min(self.input_demand_onramp + self.state_queue_length_onramp / self.T, self.CAPACITY_ONRAMP,
-    #                 self.CAPACITY_ONRAMP * (self.DENSITY_MAX - self.state_density[self.ID_ONRAMP]) / (
-    #                             self.DENSITY_MAX - self.DENSITY_CRIT))
-    #     return value
 
     def _cal_flow_onramp(self):
         self.state_flow_onramp[self.ID_ONRAMP] = min(self.input_demand_onramp + self.state_queue_length_onramp / self.T,
