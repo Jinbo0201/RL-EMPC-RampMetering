@@ -1,0 +1,97 @@
+import numpy as np
+from metanetGym.mpcOpt import *
+import pickle
+import datetime
+
+# 定义状态空间和动作空间的大小
+state_space_size = (18, 10)
+action_space_size = 2
+
+# 初始化Q值表
+Q = np.zeros(state_space_size + (action_space_size,))
+
+# 定义超参数
+learning_rate = 0.1
+discount_factor = 0.99
+epsilon = 0.1
+num_episodes = 100
+
+# 定义环境
+env = MPCEnv()
+
+
+# print(env.reset())
+
+# 定义辅助函数，将连续状态转换为离散状态
+# 状态量依次为['density'][1], ['density'][2], ['queue_length_origin'], ['queue_length_onramp']
+def discretize_state(state):
+    discretized_state = []
+
+    for i, element in enumerate(state):
+        if i == 0:
+            transformed_state = int(element // 10)
+        elif i == 1:
+            continue
+        elif i == 2:
+            continue
+        else:
+            transformed_state = int(element // 10)
+            if transformed_state > 9:
+                transformed_state = 9
+            elif transformed_state < 0:
+                transformed_state = 0
+        discretized_state.append(transformed_state)
+
+    return tuple(discretized_state)
+
+
+rewards = []
+
+# Q-learning算法
+for episode in range(num_episodes):
+    # 初始化环境
+
+    state = discretize_state(env.reset())
+    done = False
+    total_reward = 0
+
+    while not done:
+        # 选择动作
+        if np.random.uniform(0, 1) < epsilon:
+            action = np.random.randint(action_space_size)
+        else:
+            action = np.argmax(Q[state])
+
+        # 执行动作
+        next_state, reward, done, _ = env.step_q(action)
+        # print('next_state', next_state)
+        # print('reward', reward)
+        # print(next_state)
+        next_state = discretize_state(next_state)
+        # print(next_state)
+
+        # print('action:', action)
+
+        # 更新Q值
+        # print(Q[next_state])
+        # print(np.max(Q[next_state]))
+        # print(discount_factor * np.max(Q[next_state]))
+        # print(reward + discount_factor * np.max(Q[next_state]))
+        # print(reward + discount_factor * np.max(Q[next_state]) - Q[state][action])
+        # print(learning_rate * (reward + discount_factor * np.max(Q[next_state]) - Q[state][action]))
+        Q[state][action] += learning_rate * (reward + discount_factor * np.max(Q[next_state]) - Q[state][action])
+
+        # 更新状态
+        state = next_state
+
+        total_reward += reward
+
+    rewards.append(total_reward)
+    print('step ', episode, 'total reward ', total_reward)
+
+time_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+filename = f"../result/q_table_fewer_{time_string}.pkl"
+
+with open(filename, "wb") as f:
+    pickle.dump(Q, f)
