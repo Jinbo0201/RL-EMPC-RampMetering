@@ -1,5 +1,5 @@
 import math
-from metanetGym.input import *
+from input import *
 
 
 class Metanet(object):
