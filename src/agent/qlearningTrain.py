@@ -1,7 +1,9 @@
 import numpy as np
-from metanetGym.mpcOpt import *
+from src.mpc.mpcOpt import *
 import pickle
 import datetime
+import os
+from pathlib import Path
 
 # 定义状态空间和动作空间的大小
 state_space_size = (18, 18, 10, 10)
@@ -14,7 +16,7 @@ Q = np.zeros(state_space_size + (action_space_size,))
 learning_rate = 0.1
 discount_factor = 0.99
 epsilon = 0.1
-num_episodes = 500
+num_episodes = 5
 
 # 定义环境
 env = MPCEnv()
@@ -88,7 +90,19 @@ for episode in range(num_episodes):
 
 time_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-filename = f"../result/q_table_{time_string}.pkl"
+filename = f"q_table_{time_string}.pkl"
 
-with open(filename, "wb") as f:
+# 构建上上级目录下的models文件夹路径
+current_dir = Path(__file__).resolve().parent
+models_dir = current_dir.parent.parent / "models"
+
+# 确保models目录存在，不存在则创建
+os.makedirs(models_dir, exist_ok=True)
+
+# 完整的保存路径
+save_path = models_dir / filename
+
+with open(save_path, "wb") as f:
     pickle.dump(Q, f)
+
+print(f"Q表已保存到: {save_path}")

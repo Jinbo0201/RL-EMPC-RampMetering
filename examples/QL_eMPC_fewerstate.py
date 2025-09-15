@@ -1,4 +1,29 @@
-from metanetGym.mpcOpt import *
+from src.mpc.mpcOpt import *
+import pickle
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+def discretize_state(state):
+    discretized_state = []
+
+    for i, element in enumerate(state):
+        if i == 0:
+            transformed_state = int(element // 10)
+        elif i == 1:
+            continue
+        elif i == 2:
+            continue
+        else:
+            transformed_state = int(element // 10)
+            if transformed_state > 9:
+                transformed_state = 9
+            elif transformed_state < 0:
+                transformed_state = 0
+        discretized_state.append(transformed_state)
+
+    return tuple(discretized_state)
+
 
 mpc_env = MPCEnv()
 mpc_env.reset()
@@ -14,6 +39,9 @@ queue_list_o_over = []
 queue_list_r_over = []
 event_data = []
 
+with open("../models/q_table_fewer_2025-06-11_15-45-38.pkl", "rb") as f:
+    q_table = pickle.load(f)
+
 flag = 0
 
 # plt.figure()
@@ -22,13 +50,15 @@ for k in range(1000):
 
     # # case-1
     # mpc_env.step(0)
-
+    # self.simu.state['density'][1], self.simu.state['density'][2],
+    # self.simu.state['queue_length_origin'], self.simu.state['queue_length_onramp']
+    state = discretize_state(
+        [mpc_env.simu.state['density'][1], mpc_env.simu.state['density'][2], mpc_env.simu.state['queue_length_origin'],
+         mpc_env.simu.state['queue_length_onramp']])
     # case-2
-    # if flag >= 5 and (mpc_env.simu.state['queue_length_origin'] > QUEUE_MAX or mpc_env.simu.state[
-    #     'queue_length_onramp'] > QUEUE_MAX or mpc_env.simu.state['density'][1] > DENSITY_CRIT or
-    #                   mpc_env.simu.state['density'][2] > DENSITY_CRIT):
-    if flag >= 5 and (mpc_env.simu.state[
-                          'queue_length_onramp'] > QUEUE_MAX or mpc_env.simu.state['density'][1] > DENSITY_CRIT):
+    action_opt = np.argmax(q_table[state])
+    print(action_opt)
+    if flag >= 5 and np.argmax(q_table[state]):
         mpc_env.step(1)
         flag = 0
 
@@ -96,7 +126,7 @@ plt.ylabel('traffic density', fontsize=10, fontname='Times New Roman')  # Y轴�
 plt.xticks(fontsize=8)  # X轴刻度字号
 plt.yticks(fontsize=8)  # Y轴刻度字号
 plt.legend(['s-1','s-2','s-3'], loc='best', fontsize=8, frameon=False)
-plt.savefig('../resources/empc_p.png', bbox_inches='tight', dpi=600)
+# plt.savefig('../resources/rlempc_p.png', bbox_inches='tight', dpi=600)
 
 plt.figure(figsize=(4, 1.5))
 plt.plot(queue_list_o, label='w-1')
@@ -109,7 +139,7 @@ plt.ylabel('queue length', fontsize=10, fontname='Times New Roman')  # Y轴标�
 plt.xticks(fontsize=8)  # X轴刻度字号
 plt.yticks(fontsize=8)  # Y轴刻度字号
 plt.legend(['w-1','w-3'], loc='best', fontsize=8, frameon=False)
-plt.savefig('../resources/empc_w.png', bbox_inches='tight', dpi=600)
+# plt.savefig('../resources/rlempc_w.png', bbox_inches='tight', dpi=600)
 
 plt.figure(figsize=(4, 1.5))
 plt.axhline(y=0, color='lightgray', linestyle='--')
@@ -121,7 +151,7 @@ plt.xlabel('time step', fontsize=10, fontname='Times New Roman')  # X轴标签
 plt.ylabel('triggering command', fontsize=10, fontname='Times New Roman')  # Y轴标签
 plt.xticks(fontsize=8)  # X轴刻度字号
 plt.yticks(fontsize=8)  # Y轴刻度字号
-plt.savefig('../resources/empc_e.png', bbox_inches='tight', dpi=600)
+# plt.savefig('../resources/rlempc_e.png', bbox_inches='tight', dpi=600)
 
 # plt.figure()
 # plt.plot(queue_list_o_over, label='w-o-over')

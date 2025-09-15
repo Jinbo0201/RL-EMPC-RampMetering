@@ -1,6 +1,7 @@
-from metanetGym.mpcOpt import *
+from src.mpc.mpcOpt import *
 import pickle
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def discretize_state(state):
@@ -41,7 +42,7 @@ action_list_r = []
 queue_list_o_over = []
 queue_list_r_over = []
 
-with open("../result/q_table_2024-02-21_17-10-51.pkl", "rb") as f:
+with open("../models/q_table_2024-02-22_13-18-33.pkl", "rb") as f:
     q_table = pickle.load(f)
 
 flag = 0

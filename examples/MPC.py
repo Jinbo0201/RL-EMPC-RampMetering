@@ -1,4 +1,7 @@
-from metanetGym.mpcOpt import *
+from src.mpc.mpcOpt import *
+import matplotlib.pyplot as plt
+
+
 
 mpc_env = MPCEnv()
 mpc_env.reset()
