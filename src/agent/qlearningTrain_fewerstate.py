@@ -1,7 +1,8 @@
 import numpy as np
-from metanetGym.mpcOpt import *
 import pickle
 import datetime
+from src.utils.discrete_state import discretize_fewerstate
+from src.mpc.mpcOpt import *
 
 # 定义状态空间和动作空间的大小
 state_space_size = (18, 10)
@@ -22,28 +23,6 @@ env = MPCEnv()
 
 # print(env.reset())
 
-# 定义辅助函数，将连续状态转换为离散状态
-# 状态量依次为['density'][1], ['density'][2], ['queue_length_origin'], ['queue_length_onramp']
-def discretize_state(state):
-    discretized_state = []
-
-    for i, element in enumerate(state):
-        if i == 0:
-            transformed_state = int(element // 10)
-        elif i == 1:
-            continue
-        elif i == 2:
-            continue
-        else:
-            transformed_state = int(element // 10)
-            if transformed_state > 9:
-                transformed_state = 9
-            elif transformed_state < 0:
-                transformed_state = 0
-        discretized_state.append(transformed_state)
-
-    return tuple(discretized_state)
-
 
 rewards = []
 
@@ -51,7 +30,7 @@ rewards = []
 for episode in range(num_episodes):
     # 初始化环境
 
-    state = discretize_state(env.reset())
+    state = discretize_fewerstate(env.reset())
     done = False
     total_reward = 0
 
@@ -67,7 +46,7 @@ for episode in range(num_episodes):
         # print('next_state', next_state)
         # print('reward', reward)
         # print(next_state)
-        next_state = discretize_state(next_state)
+        next_state = discretize_fewerstate(next_state)
         # print(next_state)
 
         # print('action:', action)

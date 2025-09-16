@@ -3,26 +3,7 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-def discretize_state(state):
-    discretized_state = []
-
-    for i, element in enumerate(state):
-        if i == 0:
-            transformed_state = int(element // 10)
-        elif i == 1:
-            continue
-        elif i == 2:
-            continue
-        else:
-            transformed_state = int(element // 10)
-            if transformed_state > 9:
-                transformed_state = 9
-            elif transformed_state < 0:
-                transformed_state = 0
-        discretized_state.append(transformed_state)
-
-    return tuple(discretized_state)
+from src.utils.discrete_state import discretize_fewerstate
 
 
 mpc_env = MPCEnv()
@@ -52,7 +33,7 @@ for k in range(1000):
     # mpc_env.step(0)
     # self.simu.state['density'][1], self.simu.state['density'][2],
     # self.simu.state['queue_length_origin'], self.simu.state['queue_length_onramp']
-    state = discretize_state(
+    state = discretize_fewerstate(
         [mpc_env.simu.state['density'][1], mpc_env.simu.state['density'][2], mpc_env.simu.state['queue_length_origin'],
          mpc_env.simu.state['queue_length_onramp']])
     # case-2

@@ -4,7 +4,14 @@ import torch.nn as nn
 import torch.optim as optim
 import random
 from collections import deque
-from metanetGym.mpcOpt import *
+import datetime
+import os
+from pathlib import Path
+import pickle
+
+from src.mpc.mpcOpt import *
+from src.utils.discrete_state import discretize_fewerstate
+
 
 
 # 定义简单的DQN网络
@@ -92,29 +99,27 @@ class DQNAgent:
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
 
+    # 保存模型
+    def save_model(self, path):
+        """保存模型参数到指定路径"""
+        torch.save({
+            'model_state_dict': self.model.state_dict(),
+            'target_model_state_dict': self.target_model.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict(),
+            'epsilon': self.epsilon,
+        }, path)
+        print(f"模型已保存到 {path}")
 
+    # 加载模型
+    def load_model(self, path):
+        """从指定路径加载模型参数"""
+        checkpoint = torch.load(path)
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.target_model.load_state_dict(checkpoint['target_model_state_dict'])
+        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        self.epsilon = checkpoint['epsilon']
+        print(f"模型已从 {path} 加载")
 
-
-def discretize_state(state):
-
-    discretized_state = []
-
-    for i, element in enumerate(state):
-        if i == 0:
-            # print(element)
-            transformed_state = element / 100
-        elif i == 1:
-            continue
-        elif i == 2:
-            continue
-        else:
-            # print(element)
-            transformed_state = element / 200
-        discretized_state.append(transformed_state)
-
-    # print(discretized_state)
-
-    return tuple(discretized_state)
 
 
 # 训练智能体
@@ -124,26 +129,42 @@ def train_agent():
     action_size = 2
     agent = DQNAgent(state_size, action_size)
 
-    episodes = 100
+    episodes = 200
     for e in range(episodes):
-        state = discretize_state(env.reset())
+        state = discretize_fewerstate(env.reset())
         total_reward = 0
         done = False
 
         while not done:
             action = agent.act(state)
             next_state, reward, done, _ = env.step_q(action)
-            next_state = discretize_state(next_state)
+            next_state = discretize_fewerstate(next_state)
             agent.remember(state, action, reward, next_state, done)
             state = next_state
             agent.replay()
             total_reward += reward
 
         # 每100个episode更新目标网络
-        if e % 100 == 0:
+        if e % 50 == 0:
             agent.update_target_model()
 
         print(f"Episode: {e + 1}/{episodes}, Total Reward: {total_reward}, Epsilon: {agent.epsilon:.2f}")
+
+    time_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    filename = f"dqn_{time_string}.pth"
+    # 构建上上级目录下的models文件夹路径
+    current_dir = Path(__file__).resolve().parent
+    models_dir = current_dir.parent.parent / "models"
+    # 确保models目录存在，不存在则创建
+    os.makedirs(models_dir, exist_ok=True)
+    # 完整的保存路径
+    save_path = models_dir / filename
+
+    agent.save_model(save_path)
+
+
+
+
 
 
 
