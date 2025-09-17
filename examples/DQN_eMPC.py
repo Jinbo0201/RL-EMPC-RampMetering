@@ -1,13 +1,8 @@
 from torch.utils.checkpoint import checkpoint
 
 from src.mpc.mpcOpt import *
-import pickle
 import numpy as np
 import matplotlib.pyplot as plt
-
-import torch
-import torch.nn as nn
-import torch.optim as optim
 
 import os
 
@@ -31,7 +26,7 @@ event_data = []
 mpc_env = MPCEnv()
 mpc_env.reset()
 
-model_path = "../models/dqn_2025-09-16_13-53-28.pth"
+model_path = "../models/dqn_2025-09-16_15-53-37.pth"
 
 if not os.path.exists(model_path):
     raise FileNotFoundError(f"模型文件不存在: {model_path}")

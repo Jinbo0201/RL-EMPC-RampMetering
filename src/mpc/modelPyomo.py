@@ -1,5 +1,7 @@
 import pyomo.environ as pyo
+import matplotlib.pyplot as plt
 import math
+from src.simulation.input import *
 from src.config.constants import *
 
 def mpc_model():
@@ -160,4 +162,3 @@ def constraint_cal_x_w_o_over(model, k):
     return model.x_w_o[k] - QUEUE_MAX <= model.x_w_o_over[k]
 def constraint_cal_x_w_r_over(model, k):
     return model.x_w_r[k] - QUEUE_MAX <= model.x_w_r_over[k]
-

@@ -39,7 +39,7 @@ class MPCEnv(object):
         if self.action_opt == 1:
             self.action_o_list, self.action_r_list = self.solve_model()
             self.index_action = 0
-            # print('self.action_o_list', self.action_o_list, 'self.action_r_list', self.action_r_list)
+            print('self.action_o_list', self.action_o_list, 'self.action_r_list', self.action_r_list)
 
         action_o = self.action_o_list[self.index_action] if self.index_action < len(self.action_o_list) else 1
         action_r = self.action_r_list[self.index_action] if self.index_action < len(self.action_r_list) else 1
@@ -130,11 +130,13 @@ class MPCEnv(object):
         solver = pyo.SolverFactory('ipopt')
         results = solver.solve(self.model)
 
-        # print("Step-", self.simu_step, "Optimization status:", results.solver.status,
-        #       results.solver.termination_condition)
-        # print("Optimal objective value:", pyo.value(self.model.obj))
+        print("Step-", self.simu_step, "Optimization status:", results.solver.status,
+              results.solver.termination_condition)
+        print("Optimal objective value:", pyo.value(self.model.obj))
 
         self.opt_data_dict = self.get_opt_data()
+
+        print(self.opt_data_dict)
 
         return self.opt_data_dict['q_list_o'], self.opt_data_dict['r_list']
 

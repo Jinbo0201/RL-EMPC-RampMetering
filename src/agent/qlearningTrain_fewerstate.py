@@ -70,7 +70,7 @@ for episode in range(num_episodes):
 
 time_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-filename = f"../result/q_table_fewer_{time_string}.pkl"
+filename = f"../models/q_table_fewer_{time_string}.pkl"
 
 with open(filename, "wb") as f:
     pickle.dump(Q, f)
