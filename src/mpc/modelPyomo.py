@@ -1,7 +1,5 @@
 import pyomo.environ as pyo
-import matplotlib.pyplot as plt
 import math
-from src.simulation.input import *
 from src.config.constants import *
 
 def mpc_model():
