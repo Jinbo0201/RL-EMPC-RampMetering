@@ -39,7 +39,7 @@ if __name__ == "__main__":
         #     mpc_env.step(0)
 
         # case-5
-        if k % (10 * M) == 0:
+        if k % (2 * M) == 0:
             mpc_env.step(1)
         else:
             mpc_env.step(0)

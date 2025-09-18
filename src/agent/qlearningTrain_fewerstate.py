@@ -18,7 +18,7 @@ Q = np.zeros(state_space_size + (action_space_size,))
 learning_rate = 0.1
 discount_factor = 0.99
 epsilon = 0.1
-num_episodes = 10
+num_episodes = 100
 
 # 定义环境
 env = MPCEnv()

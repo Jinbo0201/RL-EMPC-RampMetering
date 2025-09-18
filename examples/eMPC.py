@@ -15,7 +15,6 @@ queue_list_o_over = []
 queue_list_r_over = []
 event_data = []
 
-flag = 0
 
 # plt.figure()
 # 参数配置
@@ -28,10 +27,9 @@ for k in range(1000):
     # if flag >= 5 and (mpc_env.simu.state['queue_length_origin'] > QUEUE_MAX or mpc_env.simu.state[
     #     'queue_length_onramp'] > QUEUE_MAX or mpc_env.simu.state['density'][1] > DENSITY_CRIT or
     #                   mpc_env.simu.state['density'][2] > DENSITY_CRIT):
-    if flag >= 5 and (mpc_env.simu.state[
-                          'queue_length_onramp'] > QUEUE_MAX or mpc_env.simu.state['density'][1] > DENSITY_CRIT):
+    if (mpc_env.simu.state['queue_length_onramp'] > QUEUE_MAX or mpc_env.simu.state['density'][1] > DENSITY_CRIT):
+
         mpc_env.step(1)
-        flag = 0
 
         event_data.append(1)
         # event_data.append(0)
@@ -44,7 +42,7 @@ for k in range(1000):
 
         event_data.append(0)
 
-    flag += 1
+    # flag += 1
     # # case-3
     # if k % (2*M) == 0:
     #     mpc_env.step(1)

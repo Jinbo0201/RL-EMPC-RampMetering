@@ -41,6 +41,8 @@ class MPCEnv(object):
             self.action_o_list, self.action_r_list = self.solve_model()
             self.index_action = 0
 
+            # print('self.action_o_list', self.action_o_list, 'self.action_r_list', self.action_r_list)
+
             for _ in range(M):
                 action_o = self.action_o_list[self.index_action] if self.index_action < len(self.action_o_list) else 1
                 action_r = self.action_r_list[self.index_action] if self.index_action < len(self.action_r_list) else 1
@@ -81,7 +83,7 @@ class MPCEnv(object):
         if self.action_opt == 1:
             self.action_o_list, self.action_r_list = self.solve_model()
             self.index_action = 0
-            # print('self.action_o_list', self.action_o_list, 'self.action_r_list', self.action_r_list)
+
 
             for _ in range(M):
                 action_o = self.action_o_list[self.index_action] if self.index_action < len(self.action_o_list) else 1
