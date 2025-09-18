@@ -26,13 +26,14 @@ event_data = []
 mpc_env = MPCEnv()
 mpc_env.reset()
 
-model_path = "../models/dqn_2025-09-16_15-53-37.pth"
+model_path = "../models/dqn_2025-09-17_13-21-30.pth"
 
 if not os.path.exists(model_path):
     raise FileNotFoundError(f"模型文件不存在: {model_path}")
 
 state_size = 2
 action_size = 2
+
 dqn_model = DQNAgent(state_size, action_size)
 
 dqn_model.load_model(model_path)

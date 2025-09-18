@@ -39,7 +39,7 @@ if __name__ == "__main__":
         #     mpc_env.step(0)
 
         # case-5
-        if k % (4 * M) == 0:
+        if k % (10 * M) == 0:
             mpc_env.step(1)
         else:
             mpc_env.step(0)
@@ -65,6 +65,11 @@ if __name__ == "__main__":
     plt.figure()
     plt.plot(queue_list_o, label='w-o')
     plt.plot(queue_list_r, label='w-r')
+    plt.legend()
+
+    plt.figure()
+    plt.plot(action_list_o, label='a-o')
+    plt.plot(action_list_r, label='a-r')
     plt.legend()
 
     plt.show()

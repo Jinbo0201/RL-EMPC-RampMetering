@@ -62,6 +62,7 @@ def mpc_model():
     # 超长队伍约束条件
     model.c_cal_x_w_o_over = pyo.Constraint(range(1, NP + 1), rule=constraint_cal_x_w_o_over)
     model.c_cal_x_w_r_over = pyo.Constraint(range(1, NP + 1), rule=constraint_cal_x_w_r_over)
+
     # 返回模型
     return model
 # 将控制变量序号从NP转换到NP_C
@@ -160,3 +161,4 @@ def constraint_cal_x_w_o_over(model, k):
     return model.x_w_o[k] - QUEUE_MAX <= model.x_w_o_over[k]
 def constraint_cal_x_w_r_over(model, k):
     return model.x_w_r[k] - QUEUE_MAX <= model.x_w_r_over[k]
+

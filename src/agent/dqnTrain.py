@@ -140,6 +140,8 @@ def train_agent():
             next_state, reward, done, _ = env.step_q(action)
             next_state = discretize_fewerstate(next_state)
             agent.remember(state, action, reward, next_state, done)
+
+            # print('step', state, action, reward, next_state, done)
             state = next_state
             agent.replay()
             total_reward += reward

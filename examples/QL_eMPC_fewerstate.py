@@ -20,7 +20,7 @@ queue_list_o_over = []
 queue_list_r_over = []
 event_data = []
 
-with open("../models/q_table_fewer_2025-06-11_15-45-38.pkl", "rb") as f:
+with open("../models/q_table_fewer_2025-09-17_13-35-31.pkl", "rb") as f:
     q_table = pickle.load(f)
 
 flag = 0
@@ -39,6 +39,7 @@ for k in range(1000):
     # case-2
     action_opt = np.argmax(q_table[state])
     print(action_opt)
+
     if flag >= 5 and np.argmax(q_table[state]):
         mpc_env.step(1)
         flag = 0

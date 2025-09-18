@@ -1,4 +1,4 @@
-from src.opt.modelPyomo import *
+from src.mpc.modelPyomo import *
 from src.simulation.input import *
 import matplotlib.pyplot as plt
 

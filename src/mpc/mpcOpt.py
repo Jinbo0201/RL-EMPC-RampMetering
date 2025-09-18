@@ -34,21 +34,46 @@ class MPCEnv(object):
         return self.observation
 
     def step(self, action):
+
         self.action_opt = action
 
         if self.action_opt == 1:
             self.action_o_list, self.action_r_list = self.solve_model()
             self.index_action = 0
-            # print('self.action_o_list', self.action_o_list, 'self.action_r_list', self.action_r_list)
 
-        action_o = self.action_o_list[self.index_action] if self.index_action < len(self.action_o_list) else 1
-        action_r = self.action_r_list[self.index_action] if self.index_action < len(self.action_r_list) else 1
+            for _ in range(M):
+                action_o = self.action_o_list[self.index_action] if self.index_action < len(self.action_o_list) else 1
+                action_r = self.action_r_list[self.index_action] if self.index_action < len(self.action_r_list) else 1
+                self.simu.step([action_o, action_r])
+                self.index_action += 1
+                self.simu_step += 1
 
-        self.simu.step([action_o, action_r])
-        self.index_action += 1
-        self.simu_step += 1
 
-    def step_q(self, action):
+        else:
+
+            for _ in range(M):
+                action_o = self.action_o_list[self.index_action] if self.index_action < len(self.action_o_list) else 1
+                action_r = self.action_r_list[self.index_action] if self.index_action < len(self.action_r_list) else 1
+                self.simu.step([action_o, action_r])
+                self.index_action += 1
+                self.simu_step += 1
+
+
+        # if self.action_opt == 1:
+        #     self.action_o_list, self.action_r_list = self.solve_model()
+        #     self.index_action = 0
+        #     # print('self.action_o_list', self.action_o_list, 'self.action_r_list', self.action_r_list)
+        #
+        # action_o = self.action_o_list[self.index_action] if self.index_action < len(self.action_o_list) else 1
+        # action_r = self.action_r_list[self.index_action] if self.index_action < len(self.action_r_list) else 1
+        #
+        # self.simu.step([action_o, action_r])
+        # self.index_action += 1
+        # self.simu_step += 1
+
+
+
+    def step_train (self, action):
         self.action_opt = action
 
         reward_sum = 0
@@ -58,7 +83,7 @@ class MPCEnv(object):
             self.index_action = 0
             # print('self.action_o_list', self.action_o_list, 'self.action_r_list', self.action_r_list)
 
-            for _ in range(5):
+            for _ in range(M):
                 action_o = self.action_o_list[self.index_action] if self.index_action < len(self.action_o_list) else 1
                 action_r = self.action_r_list[self.index_action] if self.index_action < len(self.action_r_list) else 1
                 self.simu.step([action_o, action_r])
@@ -82,27 +107,29 @@ class MPCEnv(object):
             reward_return = reward_sum
 
         else:
-            action_o = self.action_o_list[self.index_action] if self.index_action < len(self.action_o_list) else 1
-            action_r = self.action_r_list[self.index_action] if self.index_action < len(self.action_r_list) else 1
 
-            self.simu.step([action_o, action_r])
-            self.index_action += 1
-            self.simu_step += 1
+            for _ in range(M):
 
-            queue_length_origin_over = self.simu.state['queue_length_origin'] - QUEUE_MAX if self.simu.state[
-                                                                                                 'queue_length_origin'] - QUEUE_MAX > 0 else 0
-            queue_length_onramp_over = self.simu.state['queue_length_onramp'] - QUEUE_MAX if self.simu.state[
-                                                                                                 'queue_length_onramp'] - QUEUE_MAX > 0 else 0
-            reward_sum += 1/((self.simu.state['density'][0] + self.simu.state['density'][1] +
-                            self.simu.state['density'][2]) * L * LAMBDA * T + (
-                                   self.simu.state['queue_length_origin'] + self.simu.state[
-                               'queue_length_onramp']) * T + (
-                                       queue_length_origin_over + queue_length_onramp_over) * XI_W)
+                action_o = self.action_o_list[self.index_action] if self.index_action < len(self.action_o_list) else 1
+                action_r = self.action_r_list[self.index_action] if self.index_action < len(self.action_r_list) else 1
+                self.simu.step([action_o, action_r])
+                self.index_action += 1
+                self.simu_step += 1
+
+                queue_length_origin_over = self.simu.state['queue_length_origin'] - QUEUE_MAX if self.simu.state[
+                                                                                                     'queue_length_origin'] - QUEUE_MAX > 0 else 0
+                queue_length_onramp_over = self.simu.state['queue_length_onramp'] - QUEUE_MAX if self.simu.state[
+                                                                                                     'queue_length_onramp'] - QUEUE_MAX > 0 else 0
+                reward_sum += 1/((self.simu.state['density'][0] + self.simu.state['density'][1] +
+                                self.simu.state['density'][2]) * L * LAMBDA * T + (
+                                       self.simu.state['queue_length_origin'] + self.simu.state[
+                                   'queue_length_onramp']) * T + (
+                                           queue_length_origin_over + queue_length_onramp_over) * XI_W)
 
             self.observation = [self.simu.state['density'][1], self.simu.state['density'][2],
                                 self.simu.state['queue_length_origin'], self.simu.state['queue_length_onramp']]
 
-            # self.observation = [self.simu.state['density'][1], self.simu.state['queue_length_onramp']]
+                # self.observation = [self.simu.state['density'][1], self.simu.state['queue_length_onramp']]
 
             reward_return = reward_sum
 
@@ -134,9 +161,9 @@ class MPCEnv(object):
 
         results = solver.solve(self.model)
 
-        print("Step-", self.simu_step, "Optimization status:", results.solver.status,
-              results.solver.termination_condition)
-        print("Optimal objective value:", pyo.value(self.model.obj))
+        # print("Step-", self.simu_step, "Optimization status:", results.solver.status,
+        #       results.solver.termination_condition)
+        # print("Optimal objective value:", pyo.value(self.model.obj))
 
 
         self.opt_data_dict = self.get_opt_data()
