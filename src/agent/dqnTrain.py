@@ -130,7 +130,9 @@ def train_agent():
     agent = DQNAgent(state_size, action_size)
 
     episodes = 40
+
     for e in range(episodes):
+
         state = discretize_fewerstate(env.reset())
         total_reward = 0
         done = False
