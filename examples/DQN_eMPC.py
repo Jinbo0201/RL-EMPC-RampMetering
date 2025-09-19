@@ -1,5 +1,9 @@
 from torch.utils.checkpoint import checkpoint
 
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
 from src.mpc.mpcOpt import *
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,7 +30,7 @@ event_data = []
 mpc_env = MPCEnv()
 mpc_env.reset()
 
-model_path = "../models/dqn_2025-09-19_10-32-11.pth"
+model_path = "../models/dqn_2025-09-19_12-39-20.pth"
 
 if not os.path.exists(model_path):
     raise FileNotFoundError(f"模型文件不存在: {model_path}")
@@ -54,21 +58,30 @@ for k in range(1000):
         [mpc_env.simu.state['density'][1], mpc_env.simu.state['density'][2], mpc_env.simu.state['queue_length_origin'],
          mpc_env.simu.state['queue_length_onramp']])
     # case-2
-    action_opt = np.argmax(dqn_model.act(state))
-    print(action_opt)
-    if action_opt :
-        mpc_env.step(1)
 
-        event_data.append(1)
-        # event_data.append(0)
-        # event_data.append(0)
-        # event_data.append(0)
-        # event_data.append(0)
+    # print(torch.argmax(dqn_model.model(torch.FloatTensor(state))).item())
+    # print(dqn_model.act(state))
+    action_opt = torch.argmax(dqn_model.model(torch.FloatTensor(state))).item()
+    print('action_opt', action_opt)
+    # print('state', state)
 
-    else:
-        mpc_env.step(0)
 
-        event_data.append(0)
+    mpc_env.step(action_opt)
+    event_data.append(action_opt)
+
+    # if action_opt :
+    #     mpc_env.step(1)
+    #
+    #     event_data.append(1)
+    #     # event_data.append(0)
+    #     # event_data.append(0)
+    #     # event_data.append(0)
+    #     # event_data.append(0)
+    #
+    # else:
+    #     mpc_env.step(0)
+    #
+    #     event_data.append(0)
 
     # # case-3
     # if k % (2*M) == 0:

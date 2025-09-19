@@ -135,8 +135,15 @@ def train_agent():
         total_reward = 0
         done = False
 
+        action_list = []
+        state_list = []
+
         while not done:
+
             action = agent.act(state)
+
+            # print('action', action)
+
             next_state, reward, done, _ = env.step_train(action)
             next_state = discretize_fewerstate(next_state)
             agent.remember(state, action, reward, next_state, done)
@@ -146,11 +153,16 @@ def train_agent():
             agent.replay()
             total_reward += reward
 
+            action_list.append(action)
+            state_list.append(state)
+
         # 每100个episode更新目标网络
         if e % 20 == 0:
             agent.update_target_model()
 
         print(f"Episode: {e + 1}/{episodes}, Total Reward: {total_reward}, Epsilon: {agent.epsilon:.2f}")
+        print(action_list)
+        print(state_list)
 
     time_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"dqn_{time_string}.pth"
