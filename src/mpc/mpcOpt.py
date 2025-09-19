@@ -81,65 +81,78 @@ class MPCEnv(object):
         reward_sum = 0
 
         if self.action_opt == 1:
+
             self.action_o_list, self.action_r_list = self.solve_model()
             self.index_action = 0
 
 
-            for _ in range(M):
-                action_o = self.action_o_list[self.index_action] if self.index_action < len(self.action_o_list) else 1
-                action_r = self.action_r_list[self.index_action] if self.index_action < len(self.action_r_list) else 1
-                self.simu.step([action_o, action_r])
-                self.index_action += 1
-                self.simu_step += 1
+        for _ in range(M):
 
+            action_o = self.action_o_list[self.index_action] if self.index_action < len(self.action_o_list) else 1
+            action_r = self.action_r_list[self.index_action] if self.index_action < len(self.action_r_list) else 1
+            self.simu.step([action_o, action_r])
 
-                queue_length_origin_over = self.simu.state['queue_length_origin'] - QUEUE_MAX if self.simu.state[
-                                                                                                     'queue_length_origin'] - QUEUE_MAX > 0 else 0
-                queue_length_onramp_over = self.simu.state['queue_length_onramp'] - QUEUE_MAX if self.simu.state[
-                                                                                                     'queue_length_onramp'] - QUEUE_MAX > 0 else 0
-                reward_sum += 1/((self.simu.state['density'][0] + self.simu.state['density'][1] +
-                                self.simu.state['density'][2]) * L * LAMBDA * T + (
-                                       self.simu.state['queue_length_origin'] + self.simu.state[
-                                   'queue_length_onramp']) * T + (queue_length_origin_over + queue_length_onramp_over) * XI_W)
+            self.index_action += 1
+            self.simu_step += 1
+
+            queue_length_origin_over = self.simu.state['queue_length_origin'] - QUEUE_MAX if self.simu.state[
+                                                                                                 'queue_length_origin'] - QUEUE_MAX > 0 else 0
+            queue_length_onramp_over = self.simu.state['queue_length_onramp'] - QUEUE_MAX if self.simu.state[
+                                                                                                 'queue_length_onramp'] - QUEUE_MAX > 0 else 0
+            # reward_sum += 1/((self.simu.state['density'][0] + self.simu.state['density'][1] +
+            #                 self.simu.state['density'][2]) * L * LAMBDA * T + (
+            #                        self.simu.state['queue_length_origin'] + self.simu.state[
+            #                    'queue_length_onramp']) * T + (queue_length_origin_over + queue_length_onramp_over) * XI_W)
+
+            reward_ttt = (self.simu.state['density'][0] + self.simu.state['density'][1] + self.simu.state['density'][2]) * L * LAMBDA * T + (self.simu.state['queue_length_origin'] + self.simu.state['queue_length_onramp']) * T
+
+            # 0.01是为了归一化处理, reward_over最大值在100左右
+            reward_over = 0.01 * (queue_length_origin_over + queue_length_onramp_over) * XI_W
+
+            reward_action = self.action_opt
+
+            # print(reward_ttt, reward_over, reward_action)
+
+            reward_sum += -(reward_ttt + 0.01* reward_over)
 
             self.observation = [self.simu.state['density'][1], self.simu.state['density'][2],
                                 self.simu.state['queue_length_origin'], self.simu.state['queue_length_onramp']]
             # self.observation = [self.simu.state['density'][1], self.simu.state['queue_length_onramp']]
 
-            reward_return = reward_sum
+        # reward_return = reward_sum
 
-        else:
-
-            for _ in range(M):
-
-                action_o = self.action_o_list[self.index_action] if self.index_action < len(self.action_o_list) else 1
-                action_r = self.action_r_list[self.index_action] if self.index_action < len(self.action_r_list) else 1
-                self.simu.step([action_o, action_r])
-                self.index_action += 1
-                self.simu_step += 1
-
-                queue_length_origin_over = self.simu.state['queue_length_origin'] - QUEUE_MAX if self.simu.state[
-                                                                                                     'queue_length_origin'] - QUEUE_MAX > 0 else 0
-                queue_length_onramp_over = self.simu.state['queue_length_onramp'] - QUEUE_MAX if self.simu.state[
-                                                                                                     'queue_length_onramp'] - QUEUE_MAX > 0 else 0
-                reward_sum += 1/((self.simu.state['density'][0] + self.simu.state['density'][1] +
-                                self.simu.state['density'][2]) * L * LAMBDA * T + (
-                                       self.simu.state['queue_length_origin'] + self.simu.state[
-                                   'queue_length_onramp']) * T + (
-                                           queue_length_origin_over + queue_length_onramp_over) * XI_W)
-
-            self.observation = [self.simu.state['density'][1], self.simu.state['density'][2],
-                                self.simu.state['queue_length_origin'], self.simu.state['queue_length_onramp']]
-
-                # self.observation = [self.simu.state['density'][1], self.simu.state['queue_length_onramp']]
-
-            reward_return = reward_sum
+        # else:
+        #
+        #     for _ in range(M):
+        #
+        #         action_o = self.action_o_list[self.index_action] if self.index_action < len(self.action_o_list) else 1
+        #         action_r = self.action_r_list[self.index_action] if self.index_action < len(self.action_r_list) else 1
+        #         self.simu.step([action_o, action_r])
+        #         self.index_action += 1
+        #         self.simu_step += 1
+        #
+        #         queue_length_origin_over = self.simu.state['queue_length_origin'] - QUEUE_MAX if self.simu.state[
+        #                                                                                              'queue_length_origin'] - QUEUE_MAX > 0 else 0
+        #         queue_length_onramp_over = self.simu.state['queue_length_onramp'] - QUEUE_MAX if self.simu.state[
+        #                                                                                              'queue_length_onramp'] - QUEUE_MAX > 0 else 0
+        #         reward_sum += - ((self.simu.state['density'][0] + self.simu.state['density'][1] +
+        #                         self.simu.state['density'][2]) * L * LAMBDA * T + (
+        #                                self.simu.state['queue_length_origin'] + self.simu.state[
+        #                            'queue_length_onramp']) * T + (
+        #                                    queue_length_origin_over + queue_length_onramp_over) * XI_W)
+        #
+        #     self.observation = [self.simu.state['density'][1], self.simu.state['density'][2],
+        #                         self.simu.state['queue_length_origin'], self.simu.state['queue_length_onramp']]
+        #
+        #         # self.observation = [self.simu.state['density'][1], self.simu.state['queue_length_onramp']]
+        #
+        #     reward_return = reward_sum
 
         done = False
         if self.simu_step > 1000:
             done = True
 
-        return self.observation, reward_return, done, 1
+        return self.observation, reward_sum, done, 1
 
     def solve_model(self):
         demand_o, demand_r, density_e = self.input.get_input(self.simu_step, NP)
@@ -169,6 +182,8 @@ class MPCEnv(object):
 
 
         self.opt_data_dict = self.get_opt_data()
+
+        # print(self.opt_data_dict)
 
 
         return self.opt_data_dict['q_list_o'], self.opt_data_dict['r_list']

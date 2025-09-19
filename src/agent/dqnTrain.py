@@ -129,7 +129,7 @@ def train_agent():
     action_size = 2
     agent = DQNAgent(state_size, action_size)
 
-    episodes = 200
+    episodes = 40
     for e in range(episodes):
         state = discretize_fewerstate(env.reset())
         total_reward = 0
@@ -137,7 +137,7 @@ def train_agent():
 
         while not done:
             action = agent.act(state)
-            next_state, reward, done, _ = env.step_q(action)
+            next_state, reward, done, _ = env.step_train(action)
             next_state = discretize_fewerstate(next_state)
             agent.remember(state, action, reward, next_state, done)
 
@@ -147,7 +147,7 @@ def train_agent():
             total_reward += reward
 
         # 每100个episode更新目标网络
-        if e % 50 == 0:
+        if e % 20 == 0:
             agent.update_target_model()
 
         print(f"Episode: {e + 1}/{episodes}, Total Reward: {total_reward}, Epsilon: {agent.epsilon:.2f}")

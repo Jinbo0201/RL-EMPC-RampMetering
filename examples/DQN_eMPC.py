@@ -26,7 +26,7 @@ event_data = []
 mpc_env = MPCEnv()
 mpc_env.reset()
 
-model_path = "../models/dqn_2025-09-17_13-21-30.pth"
+model_path = "../models/dqn_2025-09-19_10-32-11.pth"
 
 if not os.path.exists(model_path):
     raise FileNotFoundError(f"模型文件不存在: {model_path}")
@@ -42,10 +42,6 @@ dqn_model.model.eval()
 dqn_model.target_model.eval()
 
 
-
-
-flag = 0
-
 # plt.figure()
 # 参数配置
 for k in range(1000):
@@ -60,9 +56,8 @@ for k in range(1000):
     # case-2
     action_opt = np.argmax(dqn_model.act(state))
     print(action_opt)
-    if flag >= 5 and np.argmax(dqn_model.act(state)):
+    if action_opt :
         mpc_env.step(1)
-        flag = 0
 
         event_data.append(1)
         # event_data.append(0)
@@ -75,7 +70,6 @@ for k in range(1000):
 
         event_data.append(0)
 
-    flag += 1
     # # case-3
     # if k % (2*M) == 0:
     #     mpc_env.step(1)
@@ -112,6 +106,7 @@ print('obj_value', obj_value)
 
 ttt = (sum(density_list_0) + sum(density_list_1) + sum(density_list_2)) * L * LAMBDA * T + (
         sum(queue_list_o) + sum(queue_list_r)) * T
+ttt = ttt * M
 print('ttt', ttt)
 
 print('sum_event', sum(event_data))

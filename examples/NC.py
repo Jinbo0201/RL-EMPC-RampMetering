@@ -64,6 +64,7 @@ print('obj_value', obj_value)
 
 ttt = (sum(density_list_0) + sum(density_list_1) + sum(density_list_2)) * L * LAMBDA * T + (
         sum(queue_list_o) + sum(queue_list_r)) * T
+ttt = ttt * M
 print('ttt', ttt)
 
 plt.figure(figsize=(4, 1.5))

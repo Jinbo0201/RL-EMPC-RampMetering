@@ -20,7 +20,7 @@ queue_list_o_over = []
 queue_list_r_over = []
 event_data = []
 
-with open("../models/q_table_fewer_2025-09-18_17-07-52.pkl", "rb") as f:
+with open("../models/q_table_fewer_2025-09-19_11-39-10.pkl", "rb") as f:
     q_table = pickle.load(f)
 
 # plt.figure()
@@ -38,20 +38,23 @@ for k in range(1000):
     action_opt = np.argmax(q_table[state])
     print(action_opt)
 
-    if np.argmax(q_table[state]):
+    mpc_env.step(action_opt)
+    event_data.append(action_opt)
 
-        mpc_env.step(1)
-
-        event_data.append(1)
-        # event_data.append(0)
-        # event_data.append(0)
-        # event_data.append(0)
-        # event_data.append(0)
-
-    else:
-        mpc_env.step(0)
-
-        event_data.append(0)
+    # if np.argmax(q_table[state]):
+    #
+    #     mpc_env.step(1)
+    #
+    #     event_data.append(1)
+    #     # event_data.append(0)
+    #     # event_data.append(0)
+    #     # event_data.append(0)
+    #     # event_data.append(0)
+    #
+    # else:
+    #     mpc_env.step(0)
+    #
+    #     event_data.append(0)
 
     # # case-3
     # if k % (2*M) == 0:
@@ -71,6 +74,8 @@ for k in range(1000):
     # else:
     #     mpc_env.step(0)
 
+    # print(mpc_env.simu.state)
+
     density_list_0.append(mpc_env.simu.state['density'][0])
     density_list_1.append(mpc_env.simu.state['density'][1])
     density_list_2.append(mpc_env.simu.state['density'][2])
@@ -83,12 +88,16 @@ for k in range(1000):
     queue_list_r_over.append(mpc_env.simu.state['queue_length_onramp'] - QUEUE_MAX if mpc_env.simu.state[
                                                                                           'queue_length_onramp'] - QUEUE_MAX > 0 else 0)
 
+
 obj_value = (sum(density_list_0) + sum(density_list_1) + sum(density_list_2)) * L * LAMBDA * T + (
         sum(queue_list_o) + sum(queue_list_r)) * T + (sum(queue_list_o_over) + sum(queue_list_r_over)) * XI_W
 print('obj_value', obj_value)
 
 ttt = (sum(density_list_0) + sum(density_list_1) + sum(density_list_2)) * L * LAMBDA * T + (
         sum(queue_list_o) + sum(queue_list_r)) * T
+
+ttt = ttt * M
+
 print('ttt', ttt)
 
 print('sum_event', sum(event_data))
