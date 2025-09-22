@@ -7,12 +7,28 @@ from collections import deque
 import datetime
 import os
 from pathlib import Path
-import pickle
 
 from src.mpc.mpcOpt import *
 from src.utils.discrete_state import discretize_fewerstate
 
+GAMA = 0.95
+EPS_START = 0.9
+EPS_END = 0.01
+EPS_DECAY = 0.0995
 
+LR = 0.001
+BATCH_SIZE = 128
+
+
+# # 超参数
+# self.gamma = 0.95  # 折扣因子
+# self.epsilon = 1.0  # 探索率
+# self.epsilon_min = 0.01
+# self.epsilon_decay = 0.995
+# # self.epsilon_decay = 0.999
+#
+# self.learning_rate = 0.001
+# self.batch_size = 64
 
 # 定义简单的DQN网络
 class DQN(nn.Module):
@@ -27,6 +43,21 @@ class DQN(nn.Module):
         x = torch.relu(self.fc2(x))
         return self.fc3(x)
 
+class ReplayMemory(object):
+
+    def __init__(self, capacity):
+        self.memory = deque([], maxlen=capacity)
+
+    def push(self, state, action, reward, next_state, done):
+        """Save a transition"""
+        self.memory.append((state, action, reward, next_state, done))
+
+    def sample(self, batch_size):
+        return random.sample(self.memory, batch_size)
+
+    def __len__(self):
+        return len(self.memory)
+
 
 # 定义智能体
 class DQNAgent:
@@ -34,32 +65,24 @@ class DQNAgent:
         self.state_size = state_size
         self.action_size = action_size
 
-        # 超参数
-        self.gamma = 0.95  # 折扣因子
-        self.epsilon = 1.0  # 探索率
-        self.epsilon_min = 0.01
-        self.epsilon_decay = 0.995
-        # self.epsilon_decay = 0.999
-
-        self.learning_rate = 0.001
-        self.batch_size = 64
-
-        # 经验回放缓冲区
-        self.memory = deque(maxlen=10000)
+        # # 经验回放缓冲区
+        # self.memory = deque(maxlen=10000)
+        self.memory = ReplayMemory(1000)
+        self.epsilon = EPS_START
 
         # 主网络和目标网络
         self.model = DQN(state_size, action_size)
         self.target_model = DQN(state_size, action_size)
         self.update_target_model()
 
-        self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
+        self.optimizer = optim.Adam(self.model.parameters(), lr=LR)
         self.criterion = nn.MSELoss()
 
     def update_target_model(self):
         self.target_model.load_state_dict(self.model.state_dict())
 
-    def remember(self, state, action, reward, next_state, done):
-        self.memory.append((state, action, reward, next_state, done))
+    # def remember(self, state, action, reward, next_state, done):
+    #     self.memory.append((state, action, reward, next_state, done))
 
     def act(self, state):
         if np.random.rand() <= self.epsilon:
@@ -69,10 +92,18 @@ class DQNAgent:
         action = torch.argmax(act_values).item()
         return action
 
-    def replay(self):
-        if len(self.memory) < self.batch_size:
+    def act_real(self, state):
+        state = torch.FloatTensor(state)
+        act_values = self.model(state)
+        action = torch.argmax(act_values).item()
+        return action
+
+    def optimize_model(self):
+
+        if len(self.memory) < BATCH_SIZE:
             return
-        minibatch = random.sample(self.memory, self.batch_size)
+
+        minibatch = self.memory.sample(BATCH_SIZE)
 
         states = torch.FloatTensor([i[0] for i in minibatch])
         actions = torch.LongTensor([i[1] for i in minibatch])
@@ -87,7 +118,7 @@ class DQNAgent:
         # 获取目标值
         with torch.no_grad():
             next_q_values = self.target_model(next_states).max(1)[0]
-            target = rewards + (1 - dones) * self.gamma * next_q_values
+            target = rewards + (1 - dones) * GAMA * next_q_values
 
         # 计算损失并优化
         self.optimizer.zero_grad()
@@ -96,8 +127,42 @@ class DQNAgent:
         self.optimizer.step()
 
         # 衰减探索率
-        if self.epsilon > self.epsilon_min:
-            self.epsilon *= self.epsilon_decay
+        if self.epsilon > EPS_END:
+            self.epsilon *= EPS_DECAY
+
+    #
+    #
+    #
+    # def replay(self):
+    #
+    #     if len(self.memory) < self.batch_size:
+    #         return
+    #     minibatch = random.sample(self.memory, self.batch_size)
+    #
+    #     states = torch.FloatTensor([i[0] for i in minibatch])
+    #     actions = torch.LongTensor([i[1] for i in minibatch])
+    #     rewards = torch.FloatTensor([i[2] for i in minibatch])
+    #     next_states = torch.FloatTensor([i[3] for i in minibatch])
+    #     dones = torch.FloatTensor([i[4] for i in minibatch])
+    #
+    #     # 获取当前预测
+    #     q_values = self.model(states)
+    #     q_values = q_values.gather(1, actions.unsqueeze(1)).squeeze(1)
+    #
+    #     # 获取目标值
+    #     with torch.no_grad():
+    #         next_q_values = self.target_model(next_states).max(1)[0]
+    #         target = rewards + (1 - dones) * GAMA * next_q_values
+    #
+    #     # 计算损失并优化
+    #     self.optimizer.zero_grad()
+    #     loss = self.criterion(q_values, target)
+    #     loss.backward()
+    #     self.optimizer.step()
+    #
+    #     # 衰减探索率
+    #     if self.epsilon > self.epsilon_min:
+    #         self.epsilon *= self.epsilon_decay
 
     # 保存模型
     def save_model(self, path):
@@ -129,7 +194,7 @@ def train_agent():
     action_size = 2
     agent = DQNAgent(state_size, action_size)
 
-    episodes = 40
+    episodes = 50
 
     for e in range(episodes):
 
@@ -148,23 +213,23 @@ def train_agent():
 
             next_state, reward, done, _ = env.step_train(action)
             next_state = discretize_fewerstate(next_state)
-            agent.remember(state, action, reward, next_state, done)
+            agent.memory.push(state, action, reward, next_state, done)
 
             # print('step', state, action, reward, next_state, done)
             state = next_state
-            agent.replay()
+            agent.optimize_model()
             total_reward += reward
 
             action_list.append(action)
             state_list.append(state)
 
         # 每100个episode更新目标网络
-        if e % 20 == 0:
+        if e % 100 == 0:
             agent.update_target_model()
 
         print(f"Episode: {e + 1}/{episodes}, Total Reward: {total_reward}, Epsilon: {agent.epsilon:.2f}")
         print(action_list)
-        print(state_list)
+        # print(state_list)
 
     time_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"dqn_{time_string}.pth"
@@ -177,10 +242,6 @@ def train_agent():
     save_path = models_dir / filename
 
     agent.save_model(save_path)
-
-
-
-
 
 
 

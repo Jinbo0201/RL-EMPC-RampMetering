@@ -61,7 +61,7 @@ for k in range(1000):
 
     # print(torch.argmax(dqn_model.model(torch.FloatTensor(state))).item())
     # print(dqn_model.act(state))
-    action_opt = torch.argmax(dqn_model.model(torch.FloatTensor(state))).item()
+    action_opt = dqn_model.act_real(state)
     print('action_opt', action_opt)
     # print('state', state)
 
