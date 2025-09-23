@@ -30,7 +30,7 @@ event_data = []
 mpc_env = MPCEnv()
 mpc_env.reset()
 
-model_path = "../models/dqn_2025-09-19_12-39-20.pth"
+model_path = "../models/dqn_2025-09-23_07-51-20.pth"
 
 if not os.path.exists(model_path):
     raise FileNotFoundError(f"模型文件不存在: {model_path}")
