@@ -194,7 +194,7 @@ def train_agent():
     action_size = 2
     agent = DQNAgent(state_size, action_size)
 
-    episodes = 200
+    episodes = 20
 
     for e in range(episodes):
 
@@ -223,12 +223,13 @@ def train_agent():
             action_list.append(action)
             state_list.append(state)
 
-        # 每100个episode更新目标网络
-        if e % 100 == 0:
+        # 每10个episode更新目标网络
+        if e % 10 == 0:
             agent.update_target_model()
 
         print(f"Episode: {e + 1}/{episodes}, Total Reward: {total_reward}, Epsilon: {agent.epsilon:.2f}")
         print(action_list)
+        print('sum of action', sum(action_list))
         # print(state_list)
 
     time_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")

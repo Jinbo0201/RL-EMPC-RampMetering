@@ -259,7 +259,7 @@ if __name__ == "__main__":
     agent = PPOAgent(state_dim=2, action_dim=2)
 
     # 模拟训练过程（这里使用随机生成的状态和奖励作为示例）
-    num_episodes = 200
+    num_episodes = 20
     # max_steps = 50
 
     for episode in range(num_episodes):
@@ -268,6 +268,7 @@ if __name__ == "__main__":
         state = discretize_fewerstate(env.reset())
         total_reward = 0
         done = False
+        action_list = []
 
         while not done:
             # 选择动作
@@ -284,15 +285,18 @@ if __name__ == "__main__":
             state = next_state
             total_reward += reward
 
+            action_list.append(action)
+
             # 如果结束，更新网络
             if done:
                 actor_loss, critic_loss = agent.update()
                 break
 
         # 打印训练信息
-        if (episode + 1) % 10 == 0:
-            print(f"Episode: {episode + 1}, Total Reward: {total_reward:.2f}, "
-                  f"Actor Loss: {actor_loss:.4f}, Critic Loss: {critic_loss:.4f}")
+        print(f"Episode: {episode + 1}, Total Reward: {total_reward:.2f}, "
+              f"Actor Loss: {actor_loss:.4f}, Critic Loss: {critic_loss:.4f}")
+        print(action_list)
+        print('sum of action', sum(action_list))
 
     time_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"ppo_{time_string}.pth"

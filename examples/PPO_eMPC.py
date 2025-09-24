@@ -29,7 +29,7 @@ event_data = []
 mpc_env = MPCEnv()
 mpc_env.reset()
 
-model_path = "../models/ppo_2025-09-23_15-46-22.pth"
+model_path = "../models/ppo_2025-09-24_16-47-32.pth"
 
 if not os.path.exists(model_path):
     raise FileNotFoundError(f"模型文件不存在: {model_path}")
@@ -47,7 +47,7 @@ ppo_model.load_model(model_path)
 
 # plt.figure()
 # 参数配置
-for k in range(1000):
+for k in range(DONE_STEP_CONTROL):
 
     # # case-1
     # mpc_env.step(0)
@@ -114,12 +114,15 @@ for k in range(1000):
 
 obj_value = (sum(density_list_0) + sum(density_list_1) + sum(density_list_2)) * L * LAMBDA * T + (
         sum(queue_list_o) + sum(queue_list_r)) * T + (sum(queue_list_o_over) + sum(queue_list_r_over)) * XI_W
-print('obj_value', obj_value)
+print('obj_value', obj_value * M)
+
 
 ttt = (sum(density_list_0) + sum(density_list_1) + sum(density_list_2)) * L * LAMBDA * T + (
         sum(queue_list_o) + sum(queue_list_r)) * T
-ttt = ttt * M
-print('ttt', ttt)
+print('ttt', ttt * M)
+
+queue_over = (sum(queue_list_o_over) + sum(queue_list_r_over)) * XI_W
+print('queue_over', queue_over * M)
 
 print('sum_event', sum(event_data))
 
@@ -128,7 +131,7 @@ plt.plot(density_list_0)
 plt.plot(density_list_1)
 plt.plot(density_list_2)
 plt.axhline(y=33.5, color='lightgray', linestyle='--')
-plt.xlim(0, 1000)
+plt.xlim(0, DONE_STEP_CONTROL)
 plt.ylim(-5, 120)
 plt.xlabel('time step', fontsize=10, fontname='Times New Roman')  # X轴标签
 plt.ylabel('traffic density', fontsize=10, fontname='Times New Roman')  # Y轴标签
@@ -141,7 +144,7 @@ plt.figure(figsize=(4, 1.5))
 plt.plot(queue_list_o, label='w-1')
 plt.plot(queue_list_r, label='w-3')
 plt.axhline(y=50, color='lightgray', linestyle='--')
-plt.xlim(0, 1000)
+plt.xlim(0, DONE_STEP_CONTROL)
 plt.ylim(-5, 200)
 plt.xlabel('time step', fontsize=10, fontname='Times New Roman')  # X轴标签
 plt.ylabel('queue length', fontsize=10, fontname='Times New Roman')  # Y轴标签
@@ -154,7 +157,7 @@ plt.figure(figsize=(4, 1.5))
 plt.axhline(y=0, color='lightgray', linestyle='--')
 plt.axhline(y=1, color='lightgray', linestyle='--')
 plt.plot(event_data, 'o--')
-plt.xlim(0, 1000)
+plt.xlim(0, DONE_STEP_CONTROL)
 plt.ylim(-0.1, 1.1)
 plt.xlabel('time step', fontsize=10, fontname='Times New Roman')  # X轴标签
 plt.ylabel('triggering command', fontsize=10, fontname='Times New Roman')  # Y轴标签

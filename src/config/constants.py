@@ -43,9 +43,10 @@ AUX_A_MIN = -10000000000
 NP_C = 6  # 控制变量角度出发的控制步长
 M = 3  # 控制量保持不变的仿真步长数
 XI = 1  # 控制量变化成本系数
-XI_W = 0 # 超长队伍惩罚系数
+XI_W = 0.01 # 超长队伍惩罚系数
 NP = NP_C * M  # 预测步长
-DONE_STEP = RANDOM_DEMAND_ORIGIN_CYCLE / DELTA_T * 2 # 两个流量循环周期
+DONE_STEP = int(RANDOM_DEMAND_ORIGIN_CYCLE / DELTA_T)
+DONE_STEP_CONTROL = int(RANDOM_DEMAND_ORIGIN_CYCLE / DELTA_T / M)
 # 标准化参数
 V_MAX = 120  # 最大速度，用于标准化
 FLOW_MAX = 8040  # 最大流量用于标准化
@@ -54,6 +55,5 @@ QUEUE_LENGTH_ONRAMP_MAX = 2000  # 最大匝道排队长度用于标准化
 # Reward calculation
 R_TTT = 1
 R_QUEUE = R_TTT
-R_ACTION = 1
-
+R_ACTION = 0
 

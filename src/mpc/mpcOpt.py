@@ -110,19 +110,23 @@ class MPCEnv(object):
             # 0.01是为了归一化处理, reward_over最大值在100左右
             reward_over = (queue_length_origin_over + queue_length_onramp_over) * XI_W
 
-            # 现在先不考虑action的奖罚，所以设定为0
-            reward_action = self.action_opt
+
 
             # print('step', self.simu_step, 'reward', reward_ttt, reward_over, reward_action)
             # print(R_TTT*reward_ttt, R_QUEUE*reward_over, R_ACTION*reward_action)
 
-            reward_sum += -(R_TTT*reward_ttt + R_QUEUE*reward_over + R_ACTION*reward_action)
+            reward_sum += -(R_TTT*reward_ttt + R_QUEUE*reward_over)
 
 
 
             self.observation = [self.simu.state['density'][1], self.simu.state['density'][2],
                                 self.simu.state['queue_length_origin'], self.simu.state['queue_length_onramp']]
             # self.observation = [self.simu.state['density'][1], self.simu.state['queue_length_onramp']]
+
+        # 控制量
+        reward_action = self.action_opt
+
+        reward_sum += -R_ACTION * reward_action
 
         self.control_step += 1
 
