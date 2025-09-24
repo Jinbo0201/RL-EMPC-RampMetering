@@ -25,7 +25,12 @@ for k in range(1000):
 
     mpc_env.step(1)
 
+    # mpc_env.simu.render()
+
     event_data.append(1)
+
+
+    print('action_opt', event_data[-1])
 
     # # case-1
     # mpc_env.step(0)

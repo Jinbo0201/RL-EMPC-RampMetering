@@ -42,6 +42,8 @@ for k in range(1000):
 
         event_data.append(0)
 
+    print('action is', event_data[-1])
+
     # flag += 1
     # # case-3
     # if k % (2*M) == 0:

@@ -46,6 +46,9 @@ for episode in range(num_episodes):
 
         # 执行动作
         next_state, reward, done, _ = env.step_train(action)
+
+        # print('next_state', next_state)
+
         # print('next_state', next_state)
         # print('reward', reward)
         # print(next_state)
@@ -70,6 +73,7 @@ for episode in range(num_episodes):
 
     rewards.append(total_reward)
     print('step ', episode, 'total reward ', total_reward)
+    # print('total_simulation_step', env.simu_step, env.control_step)
 
 time_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 

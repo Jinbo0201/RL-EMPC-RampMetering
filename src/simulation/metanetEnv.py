@@ -9,8 +9,8 @@ class MetanetEnv(gym.Env):
     def __init__(self):
         # 定义动作空间和状态空间
         # self.action_space = spaces.Discrete(5)  # 离散动作，分别对应[0，0.25，0.5，0.75，1]，因此需要乘以VALUE_ACTION2ACTION = 0.25
-        self.action_space = spaces.Box(low=0, high=1, shape=(2,))  # 离散动作，分别对应[0，0.25，0.5，0.75，1]，因此需要乘以VALUE_ACTION2ACTION = 0.25
-        self.observation_space = spaces.Box(low=0, high=1, shape=(7,))  # 三维状态空间，分别为横坐标为flow、speed，纵坐标为segment_1、2、3
+        self.action_space = spaces.Box(low=0, high=1, shape=(2,))
+        self.observation_space = spaces.Box(low=0, high=1, shape=(10,))  # flow, speed, density, queue_on_ramp
         # 定义METANET
         self.metanet = Metanet()
         # 初始化环境的内部状态
@@ -60,9 +60,9 @@ class MetanetEnv(gym.Env):
 
     def _calculate_reward(self):
         # 根据当前状态计算奖励
-        reward_online = self.metanet.T * sum(
-            self.state['density']) * self.metanet.L * self.metanet.LAMBDA
-        reward_queue = self.metanet.T * (self.state['queue_length_origin'] + self.state['queue_length_onramp'])
+        reward_online = T * sum(
+            self.state['density']) * L * LAMBDA
+        reward_queue = T * (self.state['queue_length_origin'] + self.state['queue_length_onramp'])
         # reward_action = 0.1 * self.action
         reward_action = 0
         return reward_online + reward_queue + reward_action
@@ -70,17 +70,20 @@ class MetanetEnv(gym.Env):
     def _is_done(self):
         # 判断是否终止
         # 训练6个小时
-        return self.time_step * self.metanet.T > 6
+        return self.time_step * T > LENGTH_H
 
     def _get_observation(self):
         observation = [
-            self.state['flow'][0] / self.metanet.FLOW_MAX,
-            self.state['flow'][1] / self.metanet.FLOW_MAX,
-            self.state['flow'][2] / self.metanet.FLOW_MAX,
-            self.state['v'][0] / self.metanet.V_MAX,
-            self.state['v'][1] / self.metanet.V_MAX,
-            self.state['v'][2] / self.metanet.V_MAX,
-            self.state['queue_length_onramp'] / self.metanet.QUEUE_LENGTH_ONRAMP_MAX
+            self.state['flow'][0] / FLOW_MAX,
+            self.state['flow'][1] / FLOW_MAX,
+            self.state['flow'][2] / FLOW_MAX,
+            self.state['v'][0] / V_MAX,
+            self.state['v'][1] / V_MAX,
+            self.state['v'][2] / V_MAX,
+            self.state['density'][0] / DENSITY_MAX ,
+            self.state['density'][1] / DENSITY_MAX ,
+            self.state['density'][2] / DENSITY_MAX ,
+            self.state['queue_length_onramp'] / QUEUE_LENGTH_ONRAMP_MAX
         ]
         return observation
 
@@ -93,34 +96,13 @@ class MetanetEnv(gym.Env):
 class Metanet(object):
 
     def __init__(self):
-        # Network Parameters
-        self.NUM_SEGMENT = 3
-        self.ID_ONRAMP = 3 - 1
-        self.T = 10 / 3600  # 步长时间 h
-        self.V_FREE = 102  # 自由速度 km/h
-        self.L = 1  # 路段长度 km
-        self.LAMBDA = 2  # 车道数
-        self.TAU = 18 / 3600  # 速度计算参数 h
-        self.ALPHA = 1.867  # 速度计算参数 常量
-        self.DENSITY_CRIT = 33.5  # 速度计算参数 vel/km
-        self.NU = 60  # 速度计算参数 km^2/h
-        self.KAPPA = 40  # 速度计算参数 vel/km
-        self.MU = 0.0122  # 速度计算参数 常量
-        self.CAPACITY_ORIGIN = 3500  # 入口最大容量 veh/h
-        self.CAPACITY_ONRAMP = 2000  # 上匝道最大容量 veh/h
-        self.DENSITY_MAX = 180  # 最大密度 veh/km
-        self.QUEUE_MAX = 50
-        # 标准化参数
-        self.V_MAX = 120  # 最大速度，用于标准化
-        self.FLOW_MAX = 8040  # 最大流量用于标准化
-        self.QUEUE_LENGTH_ONRAMP_MAX = 2000  # 最大匝道排队长度用于标准化
         # states
-        self.state_density = [0] * self.NUM_SEGMENT
-        self.state_flow = [0] * self.NUM_SEGMENT
-        self.state_v = [self.V_FREE] * self.NUM_SEGMENT
+        self.state_density = [0] * NUM_SEGMENT
+        self.state_flow = [0] * NUM_SEGMENT
+        self.state_v = [V_FREE] * NUM_SEGMENT
         self.state_queue_length_origin = 0  # 入口处的队伍长度
         self.state_queue_length_onramp = 0  # 上匝道的队伍长度
-        self.state_flow_onramp = [0] * self.NUM_SEGMENT
+        self.state_flow_onramp = [0] * NUM_SEGMENT
         # inputs
         self.input_demand_origin = 0  # 入口处的需求，即流量
         self.input_demand_onramp = 0  # 上匝道的需求，即流量
@@ -135,12 +117,12 @@ class Metanet(object):
     # 初始化状态量
     def init_state(self):
         # states
-        self.state_density = [0] * self.NUM_SEGMENT
-        self.state_flow = [0] * self.NUM_SEGMENT
-        self.state_v = [self.V_FREE] * self.NUM_SEGMENT
+        self.state_density = [0] * NUM_SEGMENT
+        self.state_flow = [0] * NUM_SEGMENT
+        self.state_v = [V_FREE] * NUM_SEGMENT
         self.state_queue_length_origin = 0  # 入口处的队伍长度
         self.state_queue_length_onramp = 0  # 上匝道的队伍长度
-        self.state_flow_onramp = [0] * self.NUM_SEGMENT
+        self.state_flow_onramp = [0] * NUM_SEGMENT
         # inputs
         self.input_demand_origin = 0  # 入口处的需求，即流量
         self.input_demand_onramp = 0  # 上匝道的需求，即流量
@@ -184,81 +166,81 @@ class Metanet(object):
         return state_dict
 
     def _cal_state_flow(self):
-        for id_segment in range(self.NUM_SEGMENT):
-            self.state_flow[id_segment] = self.LAMBDA * self.state_density[id_segment] * self.state_v[id_segment]
+        for id_segment in range(NUM_SEGMENT):
+            self.state_flow[id_segment] = LAMBDA * self.state_density[id_segment] * self.state_v[id_segment]
 
     def _cal_state_v(self):
-        for id_segment in range(self.NUM_SEGMENT):
+        for id_segment in range(NUM_SEGMENT):
             if id_segment == 0:
-                self.state_v[id_segment] = self.state_v[id_segment] + self.T / self.TAU * (self._get_Ve(
-                    self.state_density[id_segment]) - self.state_v[id_segment]) + self.T / self.L * (
+                self.state_v[id_segment] = self.state_v[id_segment] + T / TAU * (self._get_Ve(
+                    self.state_density[id_segment]) - self.state_v[id_segment]) + T / L * (
                                                    self.state_v[id_segment] - self.state_v[id_segment]) * \
-                                           self.state_v[id_segment] - (self.NU * self.T) / (
-                                                   self.TAU * self.L) * (
+                                           self.state_v[id_segment] - (NU * T) / (
+                                                   TAU * L) * (
                                                    self.state_density[id_segment + 1] - self.state_density[
                                                id_segment]) / (
-                                                   self.state_density[id_segment] + self.KAPPA)
-            elif id_segment == self.NUM_SEGMENT - 1:
-                self.state_v[id_segment] = self.state_v[id_segment] + self.T / self.TAU * (self._get_Ve(
-                    self.state_density[id_segment]) - self.state_v[id_segment]) + self.T / self.L * (
+                                                   self.state_density[id_segment] + KAPPA)
+            elif id_segment == NUM_SEGMENT - 1:
+                self.state_v[id_segment] = self.state_v[id_segment] + T / TAU * (self._get_Ve(
+                    self.state_density[id_segment]) - self.state_v[id_segment]) + T / L * (
                                                    self.state_v[id_segment - 1] - self.state_v[id_segment]) * \
-                                           self.state_v[id_segment] - (self.NU * self.T) / (
-                                                   self.TAU * self.L) * (
+                                           self.state_v[id_segment] - (NU * T) / (
+                                                   TAU * L) * (
                                                    self._get_destination_flow_max() - self.state_density[
                                                id_segment]) / (
-                                                   self.state_density[id_segment] + self.KAPPA) - (
-                                                   self.MU * self.T * self.state_flow_onramp[id_segment] *
+                                                   self.state_density[id_segment] + KAPPA) - (
+                                                   MU * T * self.state_flow_onramp[id_segment] *
                                                    self.state_v[id_segment]) / (
-                                                   self.L * self.LAMBDA * (
-                                                   self.state_density[id_segment] + self.KAPPA))
+                                                   L * LAMBDA * (
+                                                   self.state_density[id_segment] + KAPPA))
             else:
-                self.state_v[id_segment] = self.state_v[id_segment] + self.T / self.TAU * (self._get_Ve(
-                    self.state_density[id_segment]) - self.state_v[id_segment]) + self.T / self.L * (
+                self.state_v[id_segment] = self.state_v[id_segment] + T / TAU * (self._get_Ve(
+                    self.state_density[id_segment]) - self.state_v[id_segment]) + T / L * (
                                                    self.state_v[id_segment - 1] - self.state_v[id_segment]) * \
-                                           self.state_v[id_segment] - (self.NU * self.T) / (
-                                                   self.TAU * self.L) * (
+                                           self.state_v[id_segment] - (NU * T) / (
+                                                   TAU * L) * (
                                                    self.state_density[id_segment + 1] - self.state_density[
                                                id_segment]) / (
-                                                   self.state_density[id_segment] + self.KAPPA)
+                                                   self.state_density[id_segment] + KAPPA)
 
     def _cal_state_density(self):
-        for id_segment in range(self.NUM_SEGMENT):
+        for id_segment in range(NUM_SEGMENT):
             if id_segment == 0:
-                self.state_density[id_segment] = self.state_density[id_segment] + self.T / (
-                        self.L * self.LAMBDA) * (self._get_flow_origin() - self.state_flow[id_segment])
-            elif self.NUM_SEGMENT - 1:
-                self.state_density[id_segment] = self.state_density[id_segment] + self.T / (
-                        self.L * self.LAMBDA) * (self.state_flow[id_segment - 1] - self.state_flow[id_segment] +
+                self.state_density[id_segment] = self.state_density[id_segment] + T / (
+                        L * LAMBDA) * (self._get_flow_origin() - self.state_flow[id_segment])
+            elif NUM_SEGMENT - 1:
+                self.state_density[id_segment] = self.state_density[id_segment] + T / (
+                        L * LAMBDA) * (self.state_flow[id_segment - 1] - self.state_flow[id_segment] +
                                                  self.state_flow_onramp[id_segment])
             else:
-                self.state_density[id_segment] = self.state_density[id_segment] + self.T / (
-                        self.L * self.LAMBDA) * (self.state_flow[id_segment - 1] - self.state_flow[id_segment])
+                self.state_density[id_segment] = self.state_density[id_segment] + T / (
+                        L * LAMBDA) * (self.state_flow[id_segment - 1] - self.state_flow[id_segment])
 
     def _get_Ve(self, density):
-        return self.V_FREE * math.exp(-1 / self.ALPHA * (density / self.DENSITY_CRIT) ** self.ALPHA)
+        return V_FREE * math.exp(-1 / ALPHA * (density / DENSITY_CRIT) ** ALPHA)
 
     def _cal_queue_length_origin(self):
-        self.state_queue_length_origin = self.state_queue_length_origin + self.T * (
+        self.state_queue_length_origin = self.state_queue_length_origin + T * (
                 self.input_demand_origin - self._get_flow_origin())
 
     def _cal_queue_length_onramp(self):
-        self.state_queue_length_onramp = self.state_queue_length_onramp + self.T * (
-                self.input_demand_onramp - self.state_flow_onramp[self.ID_ONRAMP])
+        self.state_queue_length_onramp = self.state_queue_length_onramp + T * (
+                self.input_demand_onramp - self.state_flow_onramp[ID_ONRAMP])
 
     def _get_flow_origin(self):
         # value = min(self.input_demand_origin + self.state_queue_length_origin / self.T, self.CAPACITY_ORIGIN,
         #             self.CAPACITY_ORIGIN * (self.DENSITY_MAX - self.state_density[0]) / (self.DENSITY_MAX - self.DENSITY_CRIT))
-        return min(self.input_demand_origin + self.state_queue_length_origin / self.T,
-                   self.CAPACITY_ORIGIN * (self.DENSITY_MAX - self.state_density[0]) / (
-                           self.DENSITY_MAX - self.DENSITY_CRIT),
-                   self.action[0] * self.CAPACITY_ORIGIN)
+        return min(self.input_demand_origin + self.state_queue_length_origin / T,
+                   CAPACITY_ORIGIN * (DENSITY_MAX - self.state_density[0]) / (
+                           DENSITY_MAX - DENSITY_CRIT),
+                   self.action[0] * CAPACITY_ORIGIN)
 
 
     def _cal_flow_onramp(self):
-        self.state_flow_onramp[self.ID_ONRAMP] = min(self.input_demand_onramp + self.state_queue_length_onramp / self.T,
-                                                     self.CAPACITY_ONRAMP * (self.DENSITY_MAX - self.state_density[
-                                                         self.ID_ONRAMP]) / (self.DENSITY_MAX - self.DENSITY_CRIT),
-                                                     self.action[1] * self.CAPACITY_ONRAMP)
+        self.state_flow_onramp[ID_ONRAMP] = min(self.input_demand_onramp + self.state_queue_length_onramp / T,
+                                                     CAPACITY_ONRAMP * (DENSITY_MAX - self.state_density[
+                                                         ID_ONRAMP]) / (DENSITY_MAX - DENSITY_CRIT),
+                                                     self.action[1] * CAPACITY_ONRAMP)
         # print('print(self.action)', self.action)
 
     def _get_destination_flow_max(self):

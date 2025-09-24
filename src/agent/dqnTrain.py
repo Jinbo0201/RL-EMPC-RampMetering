@@ -194,7 +194,7 @@ def train_agent():
     action_size = 2
     agent = DQNAgent(state_size, action_size)
 
-    episodes = 2000
+    episodes = 200
 
     for e in range(episodes):
 

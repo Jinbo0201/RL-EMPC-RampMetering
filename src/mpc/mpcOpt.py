@@ -24,7 +24,7 @@ class MPCEnv(object):
         self.simu.reset()
         self.simu_step = 0
         self.control_step = 0
-        self.action = 0
+        self.action_opt = 0
         self.action_o_list = []
         self.action_r_list = []
         self.reward = None
@@ -50,6 +50,7 @@ class MPCEnv(object):
             self.index_action += 1
             self.simu_step += 1
 
+        self.control_step += 1
 
         # else:
         #
@@ -107,18 +108,23 @@ class MPCEnv(object):
             reward_ttt = (self.simu.state['density'][0] + self.simu.state['density'][1] + self.simu.state['density'][2]) * L * LAMBDA * T + (self.simu.state['queue_length_origin'] + self.simu.state['queue_length_onramp']) * T
 
             # 0.01是为了归一化处理, reward_over最大值在100左右
-            reward_over = 0.01 * (queue_length_origin_over + queue_length_onramp_over) * XI_W
+            reward_over = (queue_length_origin_over + queue_length_onramp_over) * XI_W
 
             # 现在先不考虑action的奖罚，所以设定为0
-            reward_action = 0.0 * self.action_opt
+            reward_action = self.action_opt
 
-            # print(reward_ttt, reward_over, reward_action)
+            # print('step', self.simu_step, 'reward', reward_ttt, reward_over, reward_action)
+            # print(R_TTT*reward_ttt, R_QUEUE*reward_over, R_ACTION*reward_action)
 
-            reward_sum += -(reward_ttt + reward_over + reward_action)
+            reward_sum += -(R_TTT*reward_ttt + R_QUEUE*reward_over + R_ACTION*reward_action)
+
+
 
             self.observation = [self.simu.state['density'][1], self.simu.state['density'][2],
                                 self.simu.state['queue_length_origin'], self.simu.state['queue_length_onramp']]
             # self.observation = [self.simu.state['density'][1], self.simu.state['queue_length_onramp']]
+
+        self.control_step += 1
 
         # reward_return = reward_sum
 
@@ -150,7 +156,7 @@ class MPCEnv(object):
         #     reward_return = reward_sum
 
         done = False
-        if self.simu_step > 1000:
+        if self.simu_step > DONE_STEP :
             done = True
 
         return self.observation, reward_sum, done, 1

@@ -1,8 +1,18 @@
+from torch.utils.checkpoint import checkpoint
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
 from src.mpc.mpcOpt import *
+import numpy as np
 import matplotlib.pyplot as plt
 
-mpc_env = MPCEnv()
-mpc_env.reset()
+import os
+
+from src.utils.discrete_state import discretize_fewerstate
+from src.agent.ppoTrain import PPOAgent
+
 
 density_list_0 = []
 density_list_1 = []
@@ -13,20 +23,64 @@ action_list_o = []
 action_list_r = []
 queue_list_o_over = []
 queue_list_r_over = []
+event_data = []
+
+
+mpc_env = MPCEnv()
+mpc_env.reset()
+
+model_path = "../models/ppo_2025-09-23_15-46-22.pth"
+
+if not os.path.exists(model_path):
+    raise FileNotFoundError(f"模型文件不存在: {model_path}")
+
+state_size = 2
+action_size = 2
+
+ppo_model = PPOAgent(state_size, action_size)
+
+ppo_model.load_model(model_path)
+
+# ppo_model.model.eval()
+# ppo_model.target_model.eval()
+
 
 # plt.figure()
 # 参数配置
 for k in range(1000):
 
-    # case-1
-    mpc_env.step(0)
+    # # case-1
+    # mpc_env.step(0)
+    # self.simu.state['density'][1], self.simu.state['density'][2],
+    # self.simu.state['queue_length_origin'], self.simu.state['queue_length_onramp']
+    state = discretize_fewerstate(
+        [mpc_env.simu.state['density'][1], mpc_env.simu.state['density'][2], mpc_env.simu.state['queue_length_origin'],
+         mpc_env.simu.state['queue_length_onramp']])
+    # case-2
 
-    # # case-2
-    # if k % M == 0:
+    # print(torch.argmax(dqn_model.model(torch.FloatTensor(state))).item())
+    # print(dqn_model.act(state))
+    action_opt = ppo_model.act_real(state)
+    print('action_opt', action_opt)
+    # print('state', state)
+
+
+    mpc_env.step(action_opt)
+    event_data.append(action_opt)
+
+    # if action_opt :
     #     mpc_env.step(1)
+    #
+    #     event_data.append(1)
+    #     # event_data.append(0)
+    #     # event_data.append(0)
+    #     # event_data.append(0)
+    #     # event_data.append(0)
+    #
     # else:
     #     mpc_env.step(0)
-
+    #
+    #     event_data.append(0)
 
     # # case-3
     # if k % (2*M) == 0:
@@ -46,7 +100,6 @@ for k in range(1000):
     # else:
     #     mpc_env.step(0)
 
-
     density_list_0.append(mpc_env.simu.state['density'][0])
     density_list_1.append(mpc_env.simu.state['density'][1])
     density_list_2.append(mpc_env.simu.state['density'][2])
@@ -54,23 +107,21 @@ for k in range(1000):
     queue_list_r.append(mpc_env.simu.state['queue_length_onramp'])
     action_list_o.append(mpc_env.simu.state['action'][0])
     action_list_r.append(mpc_env.simu.state['action'][1])
-    queue_list_o_over.append(mpc_env.simu.state['queue_length_origin'] - QUEUE_MAX if mpc_env.simu.state['queue_length_origin'] - QUEUE_MAX > 0 else 0)
-    queue_list_r_over.append(mpc_env.simu.state['queue_length_onramp'] - QUEUE_MAX if mpc_env.simu.state['queue_length_onramp'] - QUEUE_MAX > 0 else 0)
-
+    queue_list_o_over.append(mpc_env.simu.state['queue_length_origin'] - QUEUE_MAX if mpc_env.simu.state[
+                                                                                          'queue_length_origin'] - QUEUE_MAX > 0 else 0)
+    queue_list_r_over.append(mpc_env.simu.state['queue_length_onramp'] - QUEUE_MAX if mpc_env.simu.state[
+                                                                                          'queue_length_onramp'] - QUEUE_MAX > 0 else 0)
 
 obj_value = (sum(density_list_0) + sum(density_list_1) + sum(density_list_2)) * L * LAMBDA * T + (
         sum(queue_list_o) + sum(queue_list_r)) * T + (sum(queue_list_o_over) + sum(queue_list_r_over)) * XI_W
 print('obj_value', obj_value)
 
-print((sum(density_list_0) + sum(density_list_1) + sum(density_list_2)) * L * LAMBDA * T + (
-        sum(queue_list_o) + sum(queue_list_r)) * T)
-
-print((sum(queue_list_o_over) + sum(queue_list_r_over)) * XI_W)
-
 ttt = (sum(density_list_0) + sum(density_list_1) + sum(density_list_2)) * L * LAMBDA * T + (
         sum(queue_list_o) + sum(queue_list_r)) * T
 ttt = ttt * M
 print('ttt', ttt)
+
+print('sum_event', sum(event_data))
 
 plt.figure(figsize=(4, 1.5))
 plt.plot(density_list_0)
@@ -84,7 +135,7 @@ plt.ylabel('traffic density', fontsize=10, fontname='Times New Roman')  # Y轴�
 plt.xticks(fontsize=8)  # X轴刻度字号
 plt.yticks(fontsize=8)  # Y轴刻度字号
 plt.legend(['s-1','s-2','s-3'], loc='best', fontsize=8, frameon=False)
-# plt.savefig('../resources/nc_p.png', bbox_inches='tight', dpi=600)
+# plt.savefig('../resources/rlempc_p.png', bbox_inches='tight', dpi=600)
 
 plt.figure(figsize=(4, 1.5))
 plt.plot(queue_list_o, label='w-1')
@@ -97,9 +148,8 @@ plt.ylabel('queue length', fontsize=10, fontname='Times New Roman')  # Y轴标�
 plt.xticks(fontsize=8)  # X轴刻度字号
 plt.yticks(fontsize=8)  # Y轴刻度字号
 plt.legend(['w-1','w-3'], loc='best', fontsize=8, frameon=False)
-# plt.savefig('../resources/nc_w.png', bbox_inches='tight', dpi=600)
+# plt.savefig('../resources/rlempc_w.png', bbox_inches='tight', dpi=600)
 
-event_data = [0] * 1000
 plt.figure(figsize=(4, 1.5))
 plt.axhline(y=0, color='lightgray', linestyle='--')
 plt.axhline(y=1, color='lightgray', linestyle='--')
@@ -110,7 +160,7 @@ plt.xlabel('time step', fontsize=10, fontname='Times New Roman')  # X轴标签
 plt.ylabel('triggering command', fontsize=10, fontname='Times New Roman')  # Y轴标签
 plt.xticks(fontsize=8)  # X轴刻度字号
 plt.yticks(fontsize=8)  # Y轴刻度字号
-# plt.savefig('../resources/nc_e.png', bbox_inches='tight', dpi=600)
+# plt.savefig('../resources/rlempc_e.png', bbox_inches='tight', dpi=600)
 
 # plt.figure()
 # plt.plot(queue_list_o_over, label='w-o-over')

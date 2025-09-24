@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 from src.simulation.metanetEnv import MetanetEnv
+from src.config.constants import *
 
 if __name__ == "__main__":
     env = MetanetEnv()
@@ -26,9 +27,9 @@ if __name__ == "__main__":
         action_list.append(action)
         # print(env.metanet.state_density)
         df_density.loc[len(df_density)] = env.metanet.state_density
-        df_flow.loc[len(df_flow)] = [num * env.metanet.FLOW_MAX for num in observation[:3]]
-        df_v.loc[len(df_v)] = [num * env.metanet.V_MAX for num in observation[3:6]]
-        df_queue_length_onramp.loc[len(df_queue_length_onramp)] = observation[-1] * env.metanet.QUEUE_LENGTH_ONRAMP_MAX
+        df_flow.loc[len(df_flow)] = [num * FLOW_MAX for num in observation[:3]]
+        df_v.loc[len(df_v)] = [num * V_MAX for num in observation[3:6]]
+        df_queue_length_onramp.loc[len(df_queue_length_onramp)] = observation[-1] * QUEUE_LENGTH_ONRAMP_MAX
         df_demand.loc[len(df_demand)] = [env.metanet.input_demand_origin, env.metanet.input_demand_onramp]
         env.render()
 

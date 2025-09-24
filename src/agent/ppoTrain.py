@@ -259,7 +259,7 @@ if __name__ == "__main__":
     agent = PPOAgent(state_dim=2, action_dim=2)
 
     # 模拟训练过程（这里使用随机生成的状态和奖励作为示例）
-    num_episodes = 1
+    num_episodes = 200
     # max_steps = 50
 
     for episode in range(num_episodes):
@@ -294,14 +294,14 @@ if __name__ == "__main__":
             print(f"Episode: {episode + 1}, Total Reward: {total_reward:.2f}, "
                   f"Actor Loss: {actor_loss:.4f}, Critic Loss: {critic_loss:.4f}")
 
-    # time_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    # filename = f"ppo_{time_string}.pth"
-    # # 构建上上级目录下的models文件夹路径
-    # current_dir = Path(__file__).resolve().parent
-    # models_dir = current_dir.parent.parent / "models"
-    # # 确保models目录存在，不存在则创建
-    # os.makedirs(models_dir, exist_ok=True)
-    # # 完整的保存路径
-    # save_path = models_dir / filename
+    time_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    filename = f"ppo_{time_string}.pth"
+    # 构建上上级目录下的models文件夹路径
+    current_dir = Path(__file__).resolve().parent
+    models_dir = current_dir.parent.parent / "models"
+    # 确保models目录存在，不存在则创建
+    os.makedirs(models_dir, exist_ok=True)
+    # 完整的保存路径
+    save_path = models_dir / filename
 
-    # agent.save_model(save_path)
+    agent.save_model(save_path)
