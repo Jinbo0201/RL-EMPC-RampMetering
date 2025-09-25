@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 
 from src.mpc.mpcOpt import *
-from src.utils.discrete_state import discretize_fewerstate
+from src.utils.discrete_state import cal_obser2state
 
 GAMA = 0.95
 EPS_START = 0.9
@@ -187,7 +187,14 @@ def train_dqn_agent(epi = 20):
 
     for e in range(episodes):
 
-        state = discretize_fewerstate(env.reset())
+        obser = env.reset()
+
+        # print(obser)
+
+        state = cal_obser2state(obser)
+
+        # print(state)
+
         total_reward = 0
         done = False
 
@@ -200,12 +207,18 @@ def train_dqn_agent(epi = 20):
 
             # print('action', action)
 
-            next_state, reward, done, _ = env.step_train(action)
-            next_state = discretize_fewerstate(next_state)
-            agent.memory.push(state, action, reward, next_state, done)
+            obser_next, reward, done, _ = env.step_train(action)
+
+            # print(obser_next)
+
+            state_next = cal_obser2state(obser_next)
+
+            # print(state_next)
+
+            agent.memory.push(state, action, reward, state_next, done)
 
             # print('step', state, action, reward, next_state, done)
-            state = next_state
+            state = state_next
             agent.optimize_model()
             total_reward += reward
 

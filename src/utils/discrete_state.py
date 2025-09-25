@@ -1,3 +1,5 @@
+from src.config.constants import *
+
 
 def discretize_state(state):
 
@@ -45,3 +47,14 @@ def discretize_fewerstate(state):
         discretized_state.append(transformed_state)
 
     return tuple(discretized_state)
+
+
+def cal_obser2state(obser):
+
+    state = []
+
+    state.append(obser['density'][1] / DENSITY_MAX )
+    state.append(obser['queue_length_onramp'][0] / QUEUE_LENGTH_ONRAMP_MAX)
+
+    return tuple(state)
+

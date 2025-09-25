@@ -5,6 +5,8 @@ if __name__ == "__main__":
     mpc_env = MPCEnv()
     mpc_env.reset()
 
+    print(mpc_env.reset())
+
     density_list_0 = []
     density_list_1 = []
     density_list_2 = []
@@ -43,6 +45,9 @@ if __name__ == "__main__":
             mpc_env.step(1)
         else:
             mpc_env.step(0)
+
+
+        print(mpc_env.step_train(1))
 
         density_list_0.append(mpc_env.simu.state['density'][0])
         density_list_1.append(mpc_env.simu.state['density'][1])

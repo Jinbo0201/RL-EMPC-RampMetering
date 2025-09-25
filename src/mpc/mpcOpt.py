@@ -28,8 +28,16 @@ class MPCEnv(object):
         self.action_o_list = []
         self.action_r_list = []
         self.reward = None
-        self.observation = [self.simu.state['density'][1], self.simu.state['density'][2],
-                            self.simu.state['queue_length_origin'], self.simu.state['queue_length_onramp']]
+
+        self.observation = {
+            'density': [self.simu.state['density'][0], self.simu.state['density'][1], self.simu.state['density'][2]],
+            'flow': [self.simu.state['flow'][0], self.simu.state['flow'][1], self.simu.state['flow'][2]],
+            'v': [self.simu.state['v'][0], self.simu.state['v'][1], self.simu.state['v'][2]],
+            'queue_length_onramp': [self.simu.state['queue_length_onramp']]
+        }
+
+        # self.observation = [self.simu.state['density'][1], self.simu.state['density'][2],
+        #                     self.simu.state['queue_length_origin'], self.simu.state['queue_length_onramp']]
         # self.observation = [self.simu.state['density'][1], self.simu.state['queue_length_onramp']]
         return self.observation
 
@@ -52,6 +60,15 @@ class MPCEnv(object):
 
         self.control_step += 1
 
+        self.observation = {
+            'density': [self.simu.state['density'][0], self.simu.state['density'][1],
+                        self.simu.state['density'][2]],
+            'flow': [self.simu.state['flow'][0], self.simu.state['flow'][1], self.simu.state['flow'][2]],
+            'v': [self.simu.state['v'][0], self.simu.state['v'][1], self.simu.state['v'][2]],
+            'queue_length_onramp': [self.simu.state['queue_length_onramp']]
+        }
+
+        return self.observation
         # else:
         #
         #     for _ in range(M):
@@ -117,10 +134,15 @@ class MPCEnv(object):
 
             reward_sum += -(R_TTT*reward_ttt + R_QUEUE*reward_over)
 
-
-
-            self.observation = [self.simu.state['density'][1], self.simu.state['density'][2],
-                                self.simu.state['queue_length_origin'], self.simu.state['queue_length_onramp']]
+        self.observation = {
+            'density': [self.simu.state['density'][0], self.simu.state['density'][1],
+                        self.simu.state['density'][2]],
+            'flow': [self.simu.state['flow'][0], self.simu.state['flow'][1], self.simu.state['flow'][2]],
+            'v': [self.simu.state['v'][0], self.simu.state['v'][1], self.simu.state['v'][2]],
+            'queue_length_onramp': [self.simu.state['queue_length_onramp']]
+            }
+            # self.observation = [self.simu.state['density'][1], self.simu.state['density'][2],
+            #                     self.simu.state['queue_length_origin'], self.simu.state['queue_length_onramp']]
             # self.observation = [self.simu.state['density'][1], self.simu.state['queue_length_onramp']]
 
         # 控制量

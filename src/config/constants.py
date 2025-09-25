@@ -50,7 +50,7 @@ DONE_STEP_CONTROL = int(RANDOM_DEMAND_ORIGIN_CYCLE / DELTA_T / M)
 # 标准化参数
 V_MAX = 120  # 最大速度，用于标准化
 FLOW_MAX = 8040  # 最大流量用于标准化
-QUEUE_LENGTH_ONRAMP_MAX = 2000  # 最大匝道排队长度用于标准化
+QUEUE_LENGTH_ONRAMP_MAX = 200  # 最大匝道排队长度用于标准化
 
 # Reward calculation
 R_TTT = 1
