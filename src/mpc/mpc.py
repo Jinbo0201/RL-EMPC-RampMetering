@@ -32,7 +32,7 @@ def test_mpc():
         event_data.append(1)
 
 
-        print('action_opt', event_data[-1])
+        print('setp', k, 'action_opt', event_data[-1])
 
         # # case-1
         # mpc_env.step(0)

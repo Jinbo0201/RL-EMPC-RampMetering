@@ -2,8 +2,9 @@ from src.mpc.mpcOpt import *
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
-from src.utils.discrete_state import discretize_fewerstate
+from src.utils.discrete_state import cal_obser2state_ql
 import pickle
 
 def replace_last_chars(text, new_suffix, count):
@@ -25,8 +26,13 @@ def verify_ql_agent(agent_path):
 
     model_path = agent_path
 
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"模型文件不存在: {model_path}")
+
     mpc_env = MPCEnv()
-    mpc_env.reset()
+
+    obser = mpc_env.reset()
+    state = cal_obser2state_ql(obser)
 
     density_list_0 = []
     density_list_1 = []
@@ -50,15 +56,18 @@ def verify_ql_agent(agent_path):
         # mpc_env.step(0)
         # self.simu.state['density'][1], self.simu.state['density'][2],
         # self.simu.state['queue_length_origin'], self.simu.state['queue_length_onramp']
-        state = discretize_fewerstate(
-            [mpc_env.simu.state['density'][1], mpc_env.simu.state['density'][2], mpc_env.simu.state['queue_length_origin'],
-             mpc_env.simu.state['queue_length_onramp']])
+        # state = discretize_fewerstate(
+        #     [mpc_env.simu.state['density'][1], mpc_env.simu.state['density'][2], mpc_env.simu.state['queue_length_origin'],
+        #      mpc_env.simu.state['queue_length_onramp']])
         # case-2
         action_opt = np.argmax(q_table[state])
         print('step', k, 'action_opt', action_opt)
 
-        mpc_env.step(action_opt)
         event_data.append(action_opt)
+
+        obser = mpc_env.step(action_opt)
+        state = cal_obser2state_ql(obser)
+
 
 
         density_list_0.append(mpc_env.simu.state['density'][0])
@@ -160,5 +169,5 @@ def verify_ql_agent(agent_path):
 
 if __name__ == "__main__":
 
-    agent_path = "../../models/q_table_fewer_2025-09-25_10-50-24.pkl"
+    agent_path = "../../models/q_table_fewer_2025-09-25_08-39-59.pkl"
     verify_ql_agent(agent_path)

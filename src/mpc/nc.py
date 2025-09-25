@@ -23,7 +23,7 @@ def test_nc():
         # case-1
         mpc_env.step(0)
         event_data.append(0)
-        print('action_opt', event_data[-1])
+        print('step', k, 'action_opt', event_data[-1])
         # # case-2
         # if k % M == 0:
         #     mpc_env.step(1)

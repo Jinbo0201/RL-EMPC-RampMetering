@@ -9,7 +9,7 @@ import datetime
 from pathlib import Path
 
 from src.mpc.mpcOpt import *
-from src.utils.discrete_state import discretize_fewerstate
+from src.utils.discrete_state import cal_obser2state
 
 class Actor(nn.Module):
     """策略网络，输入状态，输出动作概率分布"""
@@ -265,7 +265,9 @@ def train_ppo_agent(epi = 20):
     for episode in range(num_episodes):
         # 随机初始状态（2维）
         # state = np.random.randn(2)
-        state = discretize_fewerstate(env.reset())
+        obser = env.reset()
+        state = cal_obser2state(obser)
+
         total_reward = 0
         done = False
         action_list = []
@@ -276,13 +278,13 @@ def train_ppo_agent(epi = 20):
             # print('action', 'log_prob', action, log_prob)
 
             # 模拟环境反馈（这里使用随机奖励和下一状态作为示例）
-            next_state, reward, done, _ = env.step_train(action)
-            next_state = discretize_fewerstate(next_state)
+            obser_next, reward, done, _ = env.step_train(action)
+            state_next = cal_obser2state(obser_next)
 
             # 存储转换
-            agent.store_transition(state, action, reward, next_state, done, log_prob)
+            agent.store_transition(state, action, reward, state_next, done, log_prob)
 
-            state = next_state
+            state = state_next
             total_reward += reward
 
             action_list.append(action)
@@ -313,4 +315,4 @@ def train_ppo_agent(epi = 20):
     return save_path
 
 if __name__ == "__main__":
-    print(train_ppo_agent())
+    print(train_ppo_agent(1))

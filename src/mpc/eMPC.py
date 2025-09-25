@@ -45,7 +45,7 @@ def test_empc():
 
             event_data.append(0)
 
-        print('action is', event_data[-1])
+        print('step', k, 'action_opt', event_data[-1])
 
         # flag += 1
         # # case-3

@@ -72,10 +72,12 @@ def verify_dqn_agent(agent_path):
         print('step', k, 'action_opt', action_opt)
         # print('state', state)
 
-        obser = mpc_env.step(action_opt)
-        state = cal_obser2state(obser)
+
 
         event_data.append(action_opt)
+
+        obser = mpc_env.step(action_opt)
+        state = cal_obser2state(obser)
 
 
         density_list_0.append(mpc_env.simu.state['density'][0])
@@ -169,5 +171,5 @@ def verify_dqn_agent(agent_path):
 
 if __name__ == "__main__":
 
-    agent_path = "../../models/dqn_2025-09-25_08-44-02.pth"
+    agent_path = "../../models/dqn_2025-09-25_14-51-20.pth"
     verify_dqn_agent(agent_path)

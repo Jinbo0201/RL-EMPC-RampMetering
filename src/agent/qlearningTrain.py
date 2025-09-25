@@ -1,7 +1,7 @@
 import numpy as np
 import pickle
 import datetime
-from src.utils.discrete_state import discretize_fewerstate
+from src.utils.discrete_state import cal_obser2state_ql
 from src.mpc.mpcOpt import *
 
 import os
@@ -32,7 +32,9 @@ def train_ql_agent(epi = 20):
     for episode in range(num_episodes):
         # 初始化环境
 
-        state = discretize_fewerstate(env.reset())
+        obser = env.reset()
+        state = cal_obser2state_ql(obser)
+
         done = False
         total_reward = 0
 
@@ -47,14 +49,13 @@ def train_ql_agent(epi = 20):
                 action = np.argmax(Q[state])
 
             # 执行动作
-            next_state, reward, done, _ = env.step_train(action)
+            obser_next, reward, done, _ = env.step_train(action)
+            state_next = cal_obser2state_ql(obser_next)
 
-            next_state = discretize_fewerstate(next_state)
-
-            Q[state][action] += LR * (reward + DIS_FACTOR * np.max(Q[next_state]) - Q[state][action])
+            Q[state][action] += LR * (reward + DIS_FACTOR * np.max(Q[state_next]) - Q[state][action])
 
             # 更新状态
-            state = next_state
+            state = state_next
             total_reward += reward
 
             action_list.append(action)
@@ -90,4 +91,4 @@ def train_ql_agent(epi = 20):
 
 
 if __name__ == "__main__":
-    print(train_ql_agent())
+    print(train_ql_agent(1))

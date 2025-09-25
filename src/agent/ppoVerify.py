@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 import os
 
-from src.utils.discrete_state import discretize_fewerstate
+from src.utils.discrete_state import cal_obser2state
 from src.agent.ppoTrain import PPOAgent
 
 import pickle
@@ -52,7 +52,8 @@ def verify_ppo_agent(agent_path):
 
 
     mpc_env = MPCEnv()
-    mpc_env.reset()
+    obser = mpc_env.reset()
+    state = cal_obser2state(obser)
 
 
     state_size = 2
@@ -74,19 +75,22 @@ def verify_ppo_agent(agent_path):
         # mpc_env.step(0)
         # self.simu.state['density'][1], self.simu.state['density'][2],
         # self.simu.state['queue_length_origin'], self.simu.state['queue_length_onramp']
-        state = discretize_fewerstate(
-            [mpc_env.simu.state['density'][1], mpc_env.simu.state['density'][2], mpc_env.simu.state['queue_length_origin'],
-             mpc_env.simu.state['queue_length_onramp']])
-        # case-2
+        # state = discretize_fewerstate(
+        #     [mpc_env.simu.state['density'][1], mpc_env.simu.state['density'][2], mpc_env.simu.state['queue_length_origin'],
+        #      mpc_env.simu.state['queue_length_onramp']])
+        # # case-2
 
         # print(torch.argmax(dqn_model.model(torch.FloatTensor(state))).item())
         # print(dqn_model.act(state))
         action_opt = ppo_model.act_real(state)
-        print('action_opt', action_opt)
+        print('step', k, 'action_opt', action_opt)
         # print('state', state)
 
+        obser = mpc_env.step(action_opt)
+        state = cal_obser2state(obser)
 
-        mpc_env.step(action_opt)
+
+
         event_data.append(action_opt)
 
 
