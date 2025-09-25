@@ -20,16 +20,6 @@ LR = 0.001
 BATCH_SIZE = 128
 
 
-# # 超参数
-# self.gamma = 0.95  # 折扣因子
-# self.epsilon = 1.0  # 探索率
-# self.epsilon_min = 0.01
-# self.epsilon_decay = 0.995
-# # self.epsilon_decay = 0.999
-#
-# self.learning_rate = 0.001
-# self.batch_size = 64
-
 # 定义简单的DQN网络
 class DQN(nn.Module):
     def __init__(self, state_size, action_size):
@@ -130,8 +120,7 @@ class DQNAgent:
         if self.epsilon > EPS_END:
             self.epsilon *= EPS_DECAY
 
-    #
-    #
+
     #
     # def replay(self):
     #
@@ -188,13 +177,13 @@ class DQNAgent:
 
 
 # 训练智能体
-def train_agent():
+def train_dqn_agent(epi = 20):
+    episodes = epi
+
     env = MPCEnv()
     state_size = 2
     action_size = 2
     agent = DQNAgent(state_size, action_size)
-
-    episodes = 20
 
     for e in range(episodes):
 
@@ -244,7 +233,9 @@ def train_agent():
 
     agent.save_model(save_path)
 
+    return save_path
+
 
 
 if __name__ == "__main__":
-    train_agent()
+    print(train_dqn_agent())

@@ -71,6 +71,8 @@ for k in range(DONE_STEP_CONTROL):
     queue_list_o_over.append(mpc_env.simu.state['queue_length_origin'] - QUEUE_MAX if mpc_env.simu.state['queue_length_origin'] - QUEUE_MAX > 0 else 0)
     queue_list_r_over.append(mpc_env.simu.state['queue_length_onramp'] - QUEUE_MAX if mpc_env.simu.state['queue_length_onramp'] - QUEUE_MAX > 0 else 0)
 
+    # print('step-', k, '-action:', action_list_o[-1], action_list_r[-1])
+
 
 obj_value = (sum(density_list_0) + sum(density_list_1) + sum(density_list_2)) * L * LAMBDA * T + (
         sum(queue_list_o) + sum(queue_list_r)) * T + (sum(queue_list_o_over) + sum(queue_list_r_over)) * XI_W

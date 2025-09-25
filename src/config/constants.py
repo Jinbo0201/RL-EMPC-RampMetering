@@ -55,5 +55,5 @@ QUEUE_LENGTH_ONRAMP_MAX = 2000  # 最大匝道排队长度用于标准化
 # Reward calculation
 R_TTT = 1
 R_QUEUE = R_TTT
-R_ACTION = 0
+R_ACTION = 0.1
 

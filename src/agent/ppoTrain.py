@@ -251,7 +251,7 @@ class PPOAgent:
 
 
 # 使用示例
-if __name__ == "__main__":
+def train_ppo_agent(epi = 20):
 
     env = MPCEnv()
 
@@ -259,7 +259,7 @@ if __name__ == "__main__":
     agent = PPOAgent(state_dim=2, action_dim=2)
 
     # 模拟训练过程（这里使用随机生成的状态和奖励作为示例）
-    num_episodes = 20
+    num_episodes = epi
     # max_steps = 50
 
     for episode in range(num_episodes):
@@ -293,7 +293,7 @@ if __name__ == "__main__":
                 break
 
         # 打印训练信息
-        print(f"Episode: {episode + 1}, Total Reward: {total_reward:.2f}, "
+        print(f"Episode: {episode + 1}/{num_episodes}, Total Reward: {total_reward:.2f}, "
               f"Actor Loss: {actor_loss:.4f}, Critic Loss: {critic_loss:.4f}")
         print(action_list)
         print('sum of action', sum(action_list))
@@ -309,3 +309,8 @@ if __name__ == "__main__":
     save_path = models_dir / filename
 
     agent.save_model(save_path)
+
+    return save_path
+
+if __name__ == "__main__":
+    print(train_ppo_agent())
