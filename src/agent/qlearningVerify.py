@@ -31,8 +31,8 @@ def verify_ql_agent(agent_path):
 
     mpc_env = MPCEnv()
 
-    obser = mpc_env.reset()
-    state = cal_obser2state_ql(obser)
+    observation = mpc_env.reset()
+    state = cal_obser2state_ql(observation)
 
     density_list_0 = []
     density_list_1 = []
@@ -65,8 +65,8 @@ def verify_ql_agent(agent_path):
 
         event_data.append(action_opt)
 
-        obser = mpc_env.step(action_opt)
-        state = cal_obser2state_ql(obser)
+        observation = mpc_env.step(action_opt)
+        state = cal_obser2state_ql(observation)
 
 
 

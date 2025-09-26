@@ -8,15 +8,19 @@ import os
 from pathlib import Path
 
 # 定义超参数
-LR = 0.1
-DIS_FACTOR = 0.99
-EPS = 0.1
 
+# EPI 训练回合数 1000~5000
+# LR 学习率 0.1~0.5
+# DIS_FACTOR 折扣因子 0.8~0.99
+# EPS_START 探索率初始值 1
+# EPS_END 探索率最小值 0.01
+# EPS_DECAY 探索率衰减 0.995
 
+def train_ql_agent(EPI = 20, LR = 0.1, DIS_FACTOR = 0.9, EPS_START = 1, EPS_END = 0.01, EPS_DECAY = 0.999):
 
-def train_ql_agent(epi = 20):
+    EPS = EPS_START
 
-    num_episodes = epi
+    num_episodes = EPI
 
     # 定义状态空间和动作空间的大小
     state_space_size = (18, 10)
@@ -32,8 +36,8 @@ def train_ql_agent(epi = 20):
     for episode in range(num_episodes):
         # 初始化环境
 
-        obser = env.reset()
-        state = cal_obser2state_ql(obser)
+        observation = env.reset()
+        state = cal_obser2state_ql(observation)
 
         done = False
         total_reward = 0
@@ -41,7 +45,9 @@ def train_ql_agent(epi = 20):
         action_list = []
         state_list = []
 
+
         while not done:
+
             # 选择动作
             if np.random.uniform(0, 1) < EPS:
                 action = np.random.randint(action_space_size)
@@ -49,8 +55,8 @@ def train_ql_agent(epi = 20):
                 action = np.argmax(Q[state])
 
             # 执行动作
-            obser_next, reward, done, _ = env.step_train(action)
-            state_next = cal_obser2state_ql(obser_next)
+            observation_next, reward, done, _ = env.step_train(action)
+            state_next = cal_obser2state_ql(observation_next)
 
             Q[state][action] += LR * (reward + DIS_FACTOR * np.max(Q[state_next]) - Q[state][action])
 
@@ -61,12 +67,18 @@ def train_ql_agent(epi = 20):
             action_list.append(action)
             state_list.append(state)
 
+            # 探索率更新
+            if EPS > EPS_END:
+                EPS = EPS * EPS_DECAY
+            else:
+                EPS = EPS_END
+
         rewards.append(total_reward)
         # print('step ', episode, 'total reward ', total_reward)
         # print('total_simulation_step', env.simu_step, env.control_step)
-        print(f"Episode: {episode + 1}/{num_episodes}, Total Reward: {total_reward}")
-        print(action_list)
-        print('sum of action', sum(action_list))
+        print(f"Episode: {episode + 1}/{num_episodes}, Total Reward: {total_reward}, SUM of Action: {sum(action_list)}, EPS: {EPS}")
+        # print(action_list)
+        # print('sum of action', sum(action_list))
 
     time_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
@@ -91,4 +103,4 @@ def train_ql_agent(epi = 20):
 
 
 if __name__ == "__main__":
-    print(train_ql_agent(1))
+    print(train_ql_agent(10, LR = 0.1))

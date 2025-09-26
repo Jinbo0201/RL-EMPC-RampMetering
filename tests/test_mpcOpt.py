@@ -19,32 +19,10 @@ if __name__ == "__main__":
     # 参数配置
     for k in range(1000):
 
-        # # case-1
-        # mpc_env.step(0)
-
-        # # case-2
-        # if k % M == 0:
+        # if k % (2 * M) == 0:
         #     mpc_env.step(1)
         # else:
         #     mpc_env.step(0)
-
-        # # case-3
-        # if k % (2*M) == 0:
-        #     mpc_env.step(1)
-        # else:
-        #     mpc_env.step(0)
-
-        # # case-4
-        # if k % (3*M) == 0:
-        #     mpc_env.step(1)
-        # else:
-        #     mpc_env.step(0)
-
-        # case-5
-        if k % (2 * M) == 0:
-            mpc_env.step(1)
-        else:
-            mpc_env.step(0)
 
 
         print(mpc_env.step_train(1))
@@ -54,8 +32,8 @@ if __name__ == "__main__":
         density_list_2.append(mpc_env.simu.state['density'][2])
         queue_list_o.append(mpc_env.simu.state['queue_length_origin'])
         queue_list_r.append(mpc_env.simu.state['queue_length_onramp'])
-        action_list_o.append(mpc_env.simu.state['action'][0])
-        action_list_r.append(mpc_env.simu.state['action'][1])
+        # action_list_o.append(mpc_env.simu.state['action'][0])
+        action_list_r.append(mpc_env.simu.state['action'])
 
     obj_value = (sum(density_list_0) + sum(density_list_1) + sum(density_list_2)) * L * LAMBDA * T + (
             sum(queue_list_o) + sum(queue_list_r)) * T

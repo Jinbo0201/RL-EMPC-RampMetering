@@ -21,7 +21,7 @@ if __name__ == "__main__":
     while not done:
         # action = env.action_space.sample()  # 示例：随机选择动作
         # print('action', action, type(action))
-        action = [0.5, 0.5]  # 动作应该在0-1之间
+        action = 1  # 动作应该在0-1之间
         observation, reward, done, _ = env.step(action)
         reward_list.append(reward)
         action_list.append(action)

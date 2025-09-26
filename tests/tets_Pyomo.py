@@ -45,11 +45,11 @@ if __name__ == "__main__":
     # a_b_list = []
     for k in range(NP):
         # print(k, "w =", pyo.value(model.x_w_o[k]), pyo.value(model.x_w_r[k]))
-        # print(k, "r =", pyo.value(model.x_q_o[k]), pyo.value(model.x_r_r[k]))
-        r_list.append(pyo.value(model.x_r_r[change_NP2NC_r(k)]))
+        # print(k, "r =", pyo.value(model.x_q_o[k]), pyo.value(model.x_q_r[k]))
+        r_list.append(pyo.value(model.x_q_r[change_NP2NC_r(k)]))
         w_list_r.append(pyo.value(model.x_w_r[k]))
         q_list_o.append(pyo.value(model.x_q_o[change_NP2NC_r(k)]))
-        w_list_o.append(pyo.value(model.x_w_o[k]))
+        # w_list_o.append(pyo.value(model.x_w_o[k]))
         v_list_0.append(pyo.value(model.x_v[0, k + 1]))
         v_list_1.append(pyo.value(model.x_v[1, k + 1]))
         v_list_2.append(pyo.value(model.x_v[2, k + 1]))
@@ -64,9 +64,9 @@ if __name__ == "__main__":
         a_delta_list_2.append(pyo.value(model.a_delta[2, k]))
         # a_a_list.append(pyo.value(model.a_a[k]))
         # a_b_list.append(pyo.value(model.a_b[k]))
-    demand_o_list = []
-    for k in range(NP):
-        demand_o_list.append(pyo.value(model.p_d_o[k]) + w_list_o[k] / T)
+    # demand_o_list = []
+    # for k in range(NP):
+    #     demand_o_list.append(pyo.value(model.p_d_o[k]) + w_list_o[k] / T)
     demand_r_list = []
     for k in range(NP):
         demand_r_list.append(pyo.value(model.p_d_r[k]) + w_list_r[k] / T)
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     axes[0, 1].set_title('queue_list')
     axes[0, 1].legend()
     axes[0, 2].plot(demand_r_list[:-M], label='d_r')
-    axes[0, 2].plot(demand_o_list[:-M], label='d_o')
+    # axes[0, 2].plot(demand_o_list[:-M], label='d_o')
     axes[0, 2].legend()
     # axes[1, 0].plot(a_delta_list_0, label='0')
     # axes[1, 0].plot(a_delta_list_1, label='1')

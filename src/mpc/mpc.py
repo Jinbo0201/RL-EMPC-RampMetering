@@ -23,7 +23,10 @@ def test_mpc():
     # 参数配置
     for k in range(DONE_STEP_CONTROL):
 
-
+        # if k < 120:
+        #     mpc_env.step(0)
+        # else:
+        #     mpc_env.step(1)
 
         mpc_env.step(1)
 
@@ -62,34 +65,30 @@ def test_mpc():
         # else:
         #     mpc_env.step(0)
 
-
         density_list_0.append(mpc_env.simu.state['density'][0])
         density_list_1.append(mpc_env.simu.state['density'][1])
         density_list_2.append(mpc_env.simu.state['density'][2])
-        queue_list_o.append(mpc_env.simu.state['queue_length_origin'])
+        # queue_list_o.append(mpc_env.simu.state['queue_length_origin'])
         queue_list_r.append(mpc_env.simu.state['queue_length_onramp'])
-        action_list_o.append(mpc_env.simu.state['action'][0])
-        action_list_r.append(mpc_env.simu.state['action'][1])
-        queue_list_o_over.append(mpc_env.simu.state['queue_length_origin'] - QUEUE_MAX if mpc_env.simu.state['queue_length_origin'] - QUEUE_MAX > 0 else 0)
-        queue_list_r_over.append(mpc_env.simu.state['queue_length_onramp'] - QUEUE_MAX if mpc_env.simu.state['queue_length_onramp'] - QUEUE_MAX > 0 else 0)
-
-        # print('step-', k, '-action:', action_list_o[-1], action_list_r[-1])
-
+        # action_list_o.append(mpc_env.simu.state['action'][0])
+        action_list_r.append(mpc_env.simu.state['action'])
+        # queue_list_o_over.append(mpc_env.simu.state['queue_length_origin'] - QUEUE_MAX if mpc_env.simu.state[
+        #                                                                                       'queue_length_origin'] - QUEUE_MAX > 0 else 0)
+        queue_list_r_over.append(mpc_env.simu.state['queue_length_onramp'] - QUEUE_MAX if mpc_env.simu.state[
+                                                                                              'queue_length_onramp'] - QUEUE_MAX > 0 else 0)
 
     obj_value = (sum(density_list_0) + sum(density_list_1) + sum(density_list_2)) * L * LAMBDA * T + (
-            sum(queue_list_o) + sum(queue_list_r)) * T + (sum(queue_list_o_over) + sum(queue_list_r_over)) * XI_W
+        sum(queue_list_r)) * T + (sum(queue_list_r_over)) * XI_W
     print('obj_value', obj_value * M)
 
-
     ttt = (sum(density_list_0) + sum(density_list_1) + sum(density_list_2)) * L * LAMBDA * T + (
-            sum(queue_list_o) + sum(queue_list_r)) * T
+        sum(queue_list_r)) * T
     print('ttt', ttt * M)
 
-    queue_over = (sum(queue_list_o_over) + sum(queue_list_r_over)) * XI_W
+    queue_over = (sum(queue_list_r_over)) * XI_W
     print('queue_over', queue_over * M)
 
     print('sum_event', sum(event_data))
-
 
     plt.figure(figsize=(4, 1.5))
     plt.plot(density_list_0)
@@ -97,16 +96,16 @@ def test_mpc():
     plt.plot(density_list_2)
     plt.axhline(y=33.5, color='lightgray', linestyle='--')
     plt.xlim(0, DONE_STEP_CONTROL)
-    plt.ylim(-5, 120)
+    plt.ylim(-5, 150)
     plt.xlabel('time step', fontsize=10, fontname='Times New Roman')  # X轴标签
     plt.ylabel('traffic density', fontsize=10, fontname='Times New Roman')  # Y轴标签
     plt.xticks(fontsize=8)  # X轴刻度字号
     plt.yticks(fontsize=8)  # Y轴刻度字号
-    plt.legend(['s-1','s-2','s-3'], loc='best', fontsize=8, frameon=False)
+    plt.legend(['s-1', 's-2', 's-3'], loc='best', fontsize=8, frameon=False)
     # plt.savefig('../resources/empc_p.png', bbox_inches='tight', dpi=600)
 
     plt.figure(figsize=(4, 1.5))
-    plt.plot(queue_list_o, label='w-1')
+    # plt.plot(queue_list_o, label='w-1')
     plt.plot(queue_list_r, label='w-3')
     plt.axhline(y=50, color='lightgray', linestyle='--')
     plt.xlim(0, DONE_STEP_CONTROL)
@@ -115,7 +114,7 @@ def test_mpc():
     plt.ylabel('queue length', fontsize=10, fontname='Times New Roman')  # Y轴标签
     plt.xticks(fontsize=8)  # X轴刻度字号
     plt.yticks(fontsize=8)  # Y轴刻度字号
-    plt.legend(['w-1','w-3'], loc='best', fontsize=8, frameon=False)
+    plt.legend(['w-1', 'w-3'], loc='best', fontsize=8, frameon=False)
     # plt.savefig('../resources/empc_w.png', bbox_inches='tight', dpi=600)
 
     plt.figure(figsize=(4, 1.5))

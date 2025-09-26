@@ -108,7 +108,7 @@ class Metanet(object):
         self.input_demand_onramp = 0  # 上匝道的需求，即流量
         self.input_downsteam_density = 0  # 出口处的密度
         # actions
-        self.action = [0, 0]
+        self.action = 0
         # step
         self.step_id = 0
         # 输入
@@ -117,9 +117,11 @@ class Metanet(object):
     # 初始化状态量
     def init_state(self):
         # states
-        self.state_density = [0] * NUM_SEGMENT
-        self.state_flow = [0] * NUM_SEGMENT
+        self.state_density = [DENSITY_INIT] * NUM_SEGMENT
         self.state_v = [V_FREE] * NUM_SEGMENT
+        # self.state_flow = [0] * NUM_SEGMENT
+        self._cal_state_flow()
+
         self.state_queue_length_origin = 0  # 入口处的队伍长度
         self.state_queue_length_onramp = 0  # 上匝道的队伍长度
         self.state_flow_onramp = [0] * NUM_SEGMENT
@@ -128,7 +130,7 @@ class Metanet(object):
         self.input_demand_onramp = 0  # 上匝道的需求，即流量
         self.input_downsteam_density = 0  # 出口处的密度
         # actions
-        self.action = [0, 0]
+        self.action = 0
         # step
         self.step_id = 0
 
@@ -137,6 +139,7 @@ class Metanet(object):
         self.action = action
 
         demand_o, demand_r, density_e = self.input.get_input(self.step_id, 1)
+
         self.input_demand_origin = demand_o[0]  # 入口处的需求，即流量
         self.input_demand_onramp = demand_r[0]  # 上匝道的需求，即流量
         self.input_downsteam_density = density_e[0]  # 出口处的密度
@@ -230,17 +233,19 @@ class Metanet(object):
     def _get_flow_origin(self):
         # value = min(self.input_demand_origin + self.state_queue_length_origin / self.T, self.CAPACITY_ORIGIN,
         #             self.CAPACITY_ORIGIN * (self.DENSITY_MAX - self.state_density[0]) / (self.DENSITY_MAX - self.DENSITY_CRIT))
-        return min(self.input_demand_origin + self.state_queue_length_origin / T,
-                   CAPACITY_ORIGIN * (DENSITY_MAX - self.state_density[0]) / (
-                           DENSITY_MAX - DENSITY_CRIT),
-                   self.action[0] * CAPACITY_ORIGIN)
+        # return min(self.input_demand_origin + self.state_queue_length_origin / T,
+        #            CAPACITY_ORIGIN * (DENSITY_MAX - self.state_density[0]) / (
+        #                    DENSITY_MAX - DENSITY_CRIT),
+        #            self.action[0] * CAPACITY_ORIGIN)
+
+        return self.input_demand_origin
 
 
     def _cal_flow_onramp(self):
         self.state_flow_onramp[ID_ONRAMP] = min(self.input_demand_onramp + self.state_queue_length_onramp / T,
                                                      CAPACITY_ONRAMP * (DENSITY_MAX - self.state_density[
                                                          ID_ONRAMP]) / (DENSITY_MAX - DENSITY_CRIT),
-                                                     self.action[1] * CAPACITY_ONRAMP)
+                                                     self.action * CAPACITY_ONRAMP)
         # print('print(self.action)', self.action)
 
     def _get_destination_flow_max(self):

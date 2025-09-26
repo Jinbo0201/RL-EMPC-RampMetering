@@ -10,7 +10,7 @@ def cal_obser2state_ql(obser):
 
     state.append(int(obser['density'][1] // 10))
 
-    transformed_state = int(obser['queue_length_onramp'][0] // 10)
+    transformed_state = int(obser['queue_length_onramp'][0] // 20)
     if transformed_state > 9:
         transformed_state = 9
     elif transformed_state < 0:

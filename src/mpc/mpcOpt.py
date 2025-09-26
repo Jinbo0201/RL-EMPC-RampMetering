@@ -46,7 +46,7 @@ class MPCEnv(object):
         self.action_opt = action
 
         if self.action_opt == 1:
-            self.action_o_list, self.action_r_list = self.solve_model()
+            self.action_r_list = self.solve_model()
             self.index_action = 0
 
             # print('self.action_o_list', self.action_o_list, 'self.action_r_list', self.action_r_list)
@@ -54,7 +54,7 @@ class MPCEnv(object):
         for _ in range(M):
             action_o = self.action_o_list[self.index_action] if self.index_action < len(self.action_o_list) else 1
             action_r = self.action_r_list[self.index_action] if self.index_action < len(self.action_r_list) else 1
-            self.simu.step([action_o, action_r])
+            self.simu.step(action_r)
             self.index_action += 1
             self.simu_step += 1
 
@@ -100,15 +100,15 @@ class MPCEnv(object):
 
         if self.action_opt == 1:
 
-            self.action_o_list, self.action_r_list = self.solve_model()
+            self.action_r_list = self.solve_model()
             self.index_action = 0
 
 
         for _ in range(M):
 
-            action_o = self.action_o_list[self.index_action] if self.index_action < len(self.action_o_list) else 1
+            # action_o = self.action_o_list[self.index_action] if self.index_action < len(self.action_o_list) else 1
             action_r = self.action_r_list[self.index_action] if self.index_action < len(self.action_r_list) else 1
-            self.simu.step([action_o, action_r])
+            self.simu.step(action_r)
 
             self.index_action += 1
             self.simu_step += 1
@@ -188,7 +188,9 @@ class MPCEnv(object):
         return self.observation, reward_sum, done, 1
 
     def solve_model(self):
+
         demand_o, demand_r, density_e = self.input.get_input(self.simu_step, NP)
+
         for j in range(NP):
             self.model.p_d_o[j] = demand_o[j]
             self.model.p_d_r[j] = demand_r[j]
@@ -199,7 +201,7 @@ class MPCEnv(object):
             self.model.p_v[id_segment] = self.simu.state['v'][id_segment]
             self.model.p_q[id_segment] = self.simu.state['flow'][id_segment]
 
-        self.model.p_w_o = max(0, self.simu.state['queue_length_origin'])
+        # self.model.p_w_o = max(0, self.simu.state['queue_length_origin'])
         self.model.p_w_r = max(0, self.simu.state['queue_length_onramp'])
 
         # self.model.write('model.lp')
@@ -208,18 +210,12 @@ class MPCEnv(object):
         # solver = pyo.SolverFactory('highs')
 
         results = solver.solve(self.model)
-
-        # print("Step-", self.simu_step, "Optimization status:", results.solver.status,
-        #       results.solver.termination_condition)
-        # print("Optimal objective value:", pyo.value(self.model.obj))
-
-
         self.opt_data_dict = self.get_opt_data()
 
         # print(self.opt_data_dict)
 
 
-        return self.opt_data_dict['q_list_o'], self.opt_data_dict['r_list']
+        return self.opt_data_dict['r_list']
 
     def get_opt_data(self):
         r_list = []
@@ -240,11 +236,11 @@ class MPCEnv(object):
         a_delta_list_2 = []
         for k in range(NP):
             # print(111)
-            # print('pyo.value(self.model.x_r_r[change_NP2NC_r(k)])', pyo.value(self.model.x_r_r[change_NP2NC_r(k)]))
-            r_list.append(pyo.value(self.model.x_r_r[change_NP2NC_r(k)]) / CAPACITY_ONRAMP)
+            # print('pyo.value(self.model.x_q_r[change_NP2NC_r(k)])', pyo.value(self.model.x_q_r[change_NP2NC_r(k)]))
+            r_list.append(pyo.value(self.model.x_q_r[change_NP2NC_r(k)]) / CAPACITY_ONRAMP)
             w_list_r.append(pyo.value(self.model.x_w_r[k]))
             q_list_o.append(pyo.value(self.model.x_q_o[change_NP2NC_r(k)]) / CAPACITY_ORIGIN)
-            w_list_o.append(pyo.value(self.model.x_w_o[k]))
+            # w_list_o.append(pyo.value(self.model.x_w_o[k]))
             # v_list_0.append(pyo.value(self.model.x_v[0, k + 1]))
             # v_list_1.append(pyo.value(self.model.x_v[1, k + 1]))
             # v_list_2.append(pyo.value(self.model.x_v[2, k + 1]))
