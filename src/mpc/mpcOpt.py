@@ -52,8 +52,11 @@ class MPCEnv(object):
             # print('self.action_o_list', self.action_o_list, 'self.action_r_list', self.action_r_list)
 
         for _ in range(M):
-            action_o = self.action_o_list[self.index_action] if self.index_action < len(self.action_o_list) else 1
+            # action_o = self.action_o_list[self.index_action] if self.index_action < len(self.action_o_list) else 1
             action_r = self.action_r_list[self.index_action] if self.index_action < len(self.action_r_list) else 1
+
+            # print('action_r', action_r)
+
             self.simu.step(action_r)
             self.index_action += 1
             self.simu_step += 1
@@ -78,7 +81,6 @@ class MPCEnv(object):
         #         self.index_action += 1
         #         self.simu_step += 1
 
-
         # if self.action_opt == 1:
         #     self.action_o_list, self.action_r_list = self.solve_model()
         #     self.index_action = 0
@@ -91,30 +93,29 @@ class MPCEnv(object):
         # self.index_action += 1
         # self.simu_step += 1
 
+    def step_train(self, action):
 
-
-    def step_train (self, action):
         self.action_opt = action
 
         reward_sum = 0
 
         if self.action_opt == 1:
-
             self.action_r_list = self.solve_model()
             self.index_action = 0
 
-
         for _ in range(M):
-
             # action_o = self.action_o_list[self.index_action] if self.index_action < len(self.action_o_list) else 1
             action_r = self.action_r_list[self.index_action] if self.index_action < len(self.action_r_list) else 1
+
+            # print('action_r', action_r)
+
             self.simu.step(action_r)
 
             self.index_action += 1
             self.simu_step += 1
 
-            queue_length_origin_over = self.simu.state['queue_length_origin'] - QUEUE_MAX if self.simu.state[
-                                                                                                 'queue_length_origin'] - QUEUE_MAX > 0 else 0
+            # queue_length_origin_over = self.simu.state['queue_length_origin'] - QUEUE_MAX if self.simu.state[
+            #                                                                                      'queue_length_origin'] - QUEUE_MAX > 0 else 0
             queue_length_onramp_over = self.simu.state['queue_length_onramp'] - QUEUE_MAX if self.simu.state[
                                                                                                  'queue_length_onramp'] - QUEUE_MAX > 0 else 0
             # reward_sum += 1/((self.simu.state['density'][0] + self.simu.state['density'][1] +
@@ -122,17 +123,16 @@ class MPCEnv(object):
             #                        self.simu.state['queue_length_origin'] + self.simu.state[
             #                    'queue_length_onramp']) * T + (queue_length_origin_over + queue_length_onramp_over) * XI_W)
 
-            reward_ttt = (self.simu.state['density'][0] + self.simu.state['density'][1] + self.simu.state['density'][2]) * L * LAMBDA * T + (self.simu.state['queue_length_origin'] + self.simu.state['queue_length_onramp']) * T
+            reward_ttt = (self.simu.state['density'][0] + self.simu.state['density'][1] + self.simu.state['density'][
+                2]) * L * LAMBDA * T + (self.simu.state['queue_length_onramp']) * T
 
             # 0.01是为了归一化处理, reward_over最大值在100左右
-            reward_over = (queue_length_origin_over + queue_length_onramp_over) * XI_W
-
-
+            reward_over = (queue_length_onramp_over) * XI_W
 
             # print('step', self.simu_step, 'reward', reward_ttt, reward_over, reward_action)
             # print(R_TTT*reward_ttt, R_QUEUE*reward_over, R_ACTION*reward_action)
 
-            reward_sum += -(R_TTT*reward_ttt + R_QUEUE*reward_over)
+            reward_sum += -(R_TTT * reward_ttt + R_QUEUE * reward_over)
 
         self.observation = {
             'density': [self.simu.state['density'][0], self.simu.state['density'][1],
@@ -140,10 +140,10 @@ class MPCEnv(object):
             'flow': [self.simu.state['flow'][0], self.simu.state['flow'][1], self.simu.state['flow'][2]],
             'v': [self.simu.state['v'][0], self.simu.state['v'][1], self.simu.state['v'][2]],
             'queue_length_onramp': [self.simu.state['queue_length_onramp']]
-            }
-            # self.observation = [self.simu.state['density'][1], self.simu.state['density'][2],
-            #                     self.simu.state['queue_length_origin'], self.simu.state['queue_length_onramp']]
-            # self.observation = [self.simu.state['density'][1], self.simu.state['queue_length_onramp']]
+        }
+        # self.observation = [self.simu.state['density'][1], self.simu.state['density'][2],
+        #                     self.simu.state['queue_length_origin'], self.simu.state['queue_length_onramp']]
+        # self.observation = [self.simu.state['density'][1], self.simu.state['queue_length_onramp']]
 
         # 控制量
         reward_action = self.action_opt
@@ -182,7 +182,7 @@ class MPCEnv(object):
         #     reward_return = reward_sum
 
         done = False
-        if self.simu_step > DONE_STEP :
+        if self.simu_step > DONE_STEP:
             done = True
 
         return self.observation, reward_sum, done, 1
@@ -214,12 +214,12 @@ class MPCEnv(object):
 
         # print(self.opt_data_dict)
 
-
         return self.opt_data_dict['r_list']
 
     def get_opt_data(self):
         r_list = []
         w_list_r = []
+        w_list_r_over = []
         q_list_o = []
         w_list_o = []
         v_list_0 = []
@@ -238,8 +238,12 @@ class MPCEnv(object):
             # print(111)
             # print('pyo.value(self.model.x_q_r[change_NP2NC_r(k)])', pyo.value(self.model.x_q_r[change_NP2NC_r(k)]))
             r_list.append(pyo.value(self.model.x_q_r[change_NP2NC_r(k)]) / CAPACITY_ONRAMP)
-            w_list_r.append(pyo.value(self.model.x_w_r[k]))
-            q_list_o.append(pyo.value(self.model.x_q_o[change_NP2NC_r(k)]) / CAPACITY_ORIGIN)
+            w_list_r.append(pyo.value(self.model.x_w_r[k + 1]))
+            w_list_r_over.append(pyo.value(self.model.x_w_r_over[k + 1]))
+
+            # print('pyo.value(self.model.x_w_r[k]', pyo.value(self.model.x_w_r_over[k]))
+
+            # q_list_o.append(pyo.value(self.model.x_q_o[change_NP2NC_r(k)]) / CAPACITY_ORIGIN)
             # w_list_o.append(pyo.value(self.model.x_w_o[k]))
             # v_list_0.append(pyo.value(self.model.x_v[0, k + 1]))
             # v_list_1.append(pyo.value(self.model.x_v[1, k + 1]))
@@ -250,23 +254,23 @@ class MPCEnv(object):
             # q_list_0.append(pyo.value(self.model.x_q[0, k + 1]))
             # q_list_1.append(pyo.value(self.model.x_q[1, k + 1]))
             # q_list_2.append(pyo.value(self.model.x_q[2, k + 1]))
-            v_list_0.append(pyo.value(self.model.x_v[0, k]))
-            v_list_1.append(pyo.value(self.model.x_v[1, k]))
-            v_list_2.append(pyo.value(self.model.x_v[2, k]))
-            p_list_0.append(pyo.value(self.model.x_p[0, k]))
-            p_list_1.append(pyo.value(self.model.x_p[1, k]))
-            p_list_2.append(pyo.value(self.model.x_p[2, k]))
-            q_list_0.append(pyo.value(self.model.x_q[0, k]))
-            q_list_1.append(pyo.value(self.model.x_q[1, k]))
-            q_list_2.append(pyo.value(self.model.x_q[2, k]))
+            v_list_0.append(pyo.value(self.model.x_v[0, k + 1]))
+            v_list_1.append(pyo.value(self.model.x_v[1, k + 1]))
+            v_list_2.append(pyo.value(self.model.x_v[2, k + 1]))
+            p_list_0.append(pyo.value(self.model.x_p[0, k + 1]))
+            p_list_1.append(pyo.value(self.model.x_p[1, k + 1]))
+            p_list_2.append(pyo.value(self.model.x_p[2, k + 1]))
+            q_list_0.append(pyo.value(self.model.x_q[0, k + 1]))
+            q_list_1.append(pyo.value(self.model.x_q[1, k + 1]))
+            q_list_2.append(pyo.value(self.model.x_q[2, k + 1]))
             a_delta_list_0.append(pyo.value(self.model.a_delta[0, k]))
             a_delta_list_1.append(pyo.value(self.model.a_delta[1, k]))
             a_delta_list_2.append(pyo.value(self.model.a_delta[2, k]))
         opt_data_dict = {}
         opt_data_dict['r_list'] = r_list
         opt_data_dict['w_list_r'] = w_list_r
-        opt_data_dict['q_list_o'] = q_list_o
-        opt_data_dict['w_list_o'] = w_list_o
+        # opt_data_dict['q_list_o'] = q_list_o
+        # opt_data_dict['w_list_o'] = w_list_o
         opt_data_dict['v_list_0'] = v_list_0
         opt_data_dict['v_list_1'] = v_list_1
         opt_data_dict['v_list_2'] = v_list_2
@@ -279,6 +283,12 @@ class MPCEnv(object):
         opt_data_dict['a_delta_list_0'] = a_delta_list_0
         opt_data_dict['a_delta_list_1'] = a_delta_list_1
         opt_data_dict['a_delta_list_2'] = a_delta_list_2
+
+        # print(w_list_r_over)
+
+        # print('objectives --- ')
+        # print(T * L * LAMBDA * sum(p_list_0 + p_list_1 + p_list_2))
+        # print(T * sum(w_list_r))
+        # print(XI_W * sum(w_list_r_over))
+
         return opt_data_dict
-
-

@@ -8,6 +8,14 @@ def test_nc():
     density_list_0 = []
     density_list_1 = []
     density_list_2 = []
+
+    demand_list_s = []
+    demand_list_r = []
+    flow_list_r = []
+    flow_list_0 = []
+    flow_list_1 = []
+    flow_list_2 = []
+
     queue_list_o = []
     queue_list_r = []
     action_list_o = []
@@ -52,12 +60,24 @@ def test_nc():
         density_list_0.append(mpc_env.simu.state['density'][0])
         density_list_1.append(mpc_env.simu.state['density'][1])
         density_list_2.append(mpc_env.simu.state['density'][2])
-        queue_list_o.append(mpc_env.simu.state['queue_length_origin'])
+
+        # print('flow', mpc_env.simu.state['flow'][0])
+
+        flow_list_0.append(mpc_env.simu.state['flow'][0])
+        flow_list_1.append(mpc_env.simu.state['flow'][1])
+        flow_list_2.append(mpc_env.simu.state['flow'][2])
+        demand_list_s.append(mpc_env.simu.state['input'][0])
+        demand_list_r.append(mpc_env.simu.state['input'][1])
+        flow_list_r.append(mpc_env.simu.state['flow_onramp'][2])
+
+        # print(mpc_env.simu.state['flow_onramp'])
+
+        # queue_list_o.append(mpc_env.simu.state['queue_length_origin'])
         queue_list_r.append(mpc_env.simu.state['queue_length_onramp'])
         # action_list_o.append(mpc_env.simu.state['action'][0])
         action_list_r.append(mpc_env.simu.state['action'])
-        queue_list_o_over.append(mpc_env.simu.state['queue_length_origin'] - QUEUE_MAX if mpc_env.simu.state[
-                                                                                              'queue_length_origin'] - QUEUE_MAX > 0 else 0)
+        # queue_list_o_over.append(mpc_env.simu.state['queue_length_origin'] - QUEUE_MAX if mpc_env.simu.state[
+        #                                                                                       'queue_length_origin'] - QUEUE_MAX > 0 else 0)
         queue_list_r_over.append(mpc_env.simu.state['queue_length_onramp'] - QUEUE_MAX if mpc_env.simu.state[
                                                                                               'queue_length_onramp'] - QUEUE_MAX > 0 else 0)
 
@@ -68,6 +88,9 @@ def test_nc():
     ttt = (sum(density_list_0) + sum(density_list_1) + sum(density_list_2)) * L * LAMBDA * T + (
         sum(queue_list_r)) * T
     print('ttt', ttt * M)
+
+    # queue = (sum(queue_list_r)) * XI_W
+    # print('queue', queue * M)
 
     queue_over = (sum(queue_list_r_over)) * XI_W
     print('queue_over', queue_over * M)
@@ -80,7 +103,7 @@ def test_nc():
     plt.plot(density_list_2)
     plt.axhline(y=33.5, color='lightgray', linestyle='--')
     plt.xlim(0, DONE_STEP_CONTROL)
-    plt.ylim(-5, 150)
+    # plt.ylim(-5, 150)
     plt.xlabel('time step', fontsize=10, fontname='Times New Roman')  # X轴标签
     plt.ylabel('traffic density', fontsize=10, fontname='Times New Roman')  # Y轴标签
     plt.xticks(fontsize=8)  # X轴刻度字号
@@ -89,16 +112,33 @@ def test_nc():
     # plt.savefig('../resources/empc_p.png', bbox_inches='tight', dpi=600)
 
     plt.figure(figsize=(4, 1.5))
+    plt.plot(flow_list_0)
+    plt.plot(flow_list_1)
+    plt.plot(flow_list_2)
+    plt.plot(demand_list_s)
+    plt.plot(demand_list_r)
+    plt.plot(flow_list_r)
+    plt.axhline(y=33.5, color='lightgray', linestyle='--')
+    plt.xlim(0, DONE_STEP_CONTROL)
+    # plt.ylim(-5, 150)
+    plt.xlabel('time step', fontsize=10, fontname='Times New Roman')  # X轴标签
+    plt.ylabel('traffic density', fontsize=10, fontname='Times New Roman')  # Y轴标签
+    plt.xticks(fontsize=8)  # X轴刻度字号
+    plt.yticks(fontsize=8)  # Y轴刻度字号
+    plt.legend(['f-1', 'f-2', 'f-3', 'd-s', 'd-r', 'action'], loc='best', fontsize=8, frameon=False)
+    # plt.savefig('../resources/empc_p.png', bbox_inches='tight', dpi=600)
+
+    plt.figure(figsize=(4, 1.5))
     # plt.plot(queue_list_o, label='w-1')
     plt.plot(queue_list_r, label='w-3')
     plt.axhline(y=50, color='lightgray', linestyle='--')
     plt.xlim(0, DONE_STEP_CONTROL)
-    plt.ylim(-5, 200)
+    # plt.ylim(-5, 200)
     plt.xlabel('time step', fontsize=10, fontname='Times New Roman')  # X轴标签
     plt.ylabel('queue length', fontsize=10, fontname='Times New Roman')  # Y轴标签
     plt.xticks(fontsize=8)  # X轴刻度字号
     plt.yticks(fontsize=8)  # Y轴刻度字号
-    plt.legend(['w-1', 'w-3'], loc='best', fontsize=8, frameon=False)
+    plt.legend(['w-3'], loc='best', fontsize=8, frameon=False)
     # plt.savefig('../resources/empc_w.png', bbox_inches='tight', dpi=600)
 
     plt.figure(figsize=(4, 1.5))
@@ -106,7 +146,7 @@ def test_nc():
     plt.axhline(y=1, color='lightgray', linestyle='--')
     plt.plot(event_data, 'o--')
     plt.xlim(0, DONE_STEP_CONTROL)
-    plt.ylim(-0.1, 1.1)
+    # plt.ylim(-0.1, 1.1)
     plt.xlabel('time step', fontsize=10, fontname='Times New Roman')  # X轴标签
     plt.ylabel('triggering command', fontsize=10, fontname='Times New Roman')  # Y轴标签
     plt.xticks(fontsize=8)  # X轴刻度字号

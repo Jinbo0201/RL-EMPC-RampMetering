@@ -62,7 +62,7 @@ class MetanetEnv(gym.Env):
         # 根据当前状态计算奖励
         reward_online = T * sum(
             self.state['density']) * L * LAMBDA
-        reward_queue = T * (self.state['queue_length_origin'] + self.state['queue_length_onramp'])
+        reward_queue = T * (self.state['queue_length_onramp'])
         # reward_action = 0.1 * self.action
         reward_action = 0
         return reward_online + reward_queue + reward_action
@@ -136,6 +136,7 @@ class Metanet(object):
 
     # 步进仿真
     def step_state(self, action):
+
         self.action = action
 
         demand_o, demand_r, density_e = self.input.get_input(self.step_id, 1)
@@ -151,7 +152,7 @@ class Metanet(object):
         self._cal_state_flow()
 
         self._cal_queue_length_onramp()
-        self._cal_queue_length_origin()
+        # self._cal_queue_length_origin()
 
         self.step_id += 1
 
@@ -161,7 +162,7 @@ class Metanet(object):
         state_dict['density'] = self.state_density
         state_dict['flow'] = self.state_flow
         state_dict['v'] = self.state_v
-        state_dict['queue_length_origin'] = self.state_queue_length_origin
+        # state_dict['queue_length_origin'] = self.state_queue_length_origin
         state_dict['queue_length_onramp'] = self.state_queue_length_onramp
         state_dict['flow_onramp'] = self.state_flow_onramp
         state_dict['input'] = [self.input_demand_origin, self.input_demand_onramp, self.input_downsteam_density]
@@ -222,9 +223,9 @@ class Metanet(object):
     def _get_Ve(self, density):
         return V_FREE * math.exp(-1 / ALPHA * (density / DENSITY_CRIT) ** ALPHA)
 
-    def _cal_queue_length_origin(self):
-        self.state_queue_length_origin = self.state_queue_length_origin + T * (
-                self.input_demand_origin - self._get_flow_origin())
+    # def _cal_queue_length_origin(self):
+    #     self.state_queue_length_origin = self.state_queue_length_origin + T * (
+    #             self.input_demand_origin - self._get_flow_origin())
 
     def _cal_queue_length_onramp(self):
         self.state_queue_length_onramp = self.state_queue_length_onramp + T * (
@@ -242,6 +243,12 @@ class Metanet(object):
 
 
     def _cal_flow_onramp(self):
+
+        # print(self.input_demand_onramp + self.state_queue_length_onramp / T,
+        #                                              CAPACITY_ONRAMP * (DENSITY_MAX - self.state_density[
+        #                                                  ID_ONRAMP]) / (DENSITY_MAX - DENSITY_CRIT),
+        #                                              self.action * CAPACITY_ONRAMP)
+
         self.state_flow_onramp[ID_ONRAMP] = min(self.input_demand_onramp + self.state_queue_length_onramp / T,
                                                      CAPACITY_ONRAMP * (DENSITY_MAX - self.state_density[
                                                          ID_ONRAMP]) / (DENSITY_MAX - DENSITY_CRIT),

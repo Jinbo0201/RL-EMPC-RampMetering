@@ -16,7 +16,7 @@ from pathlib import Path
 # EPS_END 探索率最小值 0.01
 # EPS_DECAY 探索率衰减 0.995
 
-def train_ql_agent(EPI = 20, LR = 0.1, DIS_FACTOR = 0.9, EPS_START = 1, EPS_END = 0.01, EPS_DECAY = 0.999):
+def train_ql_agent(EPI = 20, LR = 0.1, DIS_FACTOR = 0.9, EPS_START = 1, EPS_END = 0.01, EPS_DECAY = 0.995):
 
     EPS = EPS_START
 

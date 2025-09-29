@@ -2,10 +2,11 @@ import pyomo.environ as pyo
 import math
 from src.config.constants import *
 
+
 def mpc_model():
     model = pyo.ConcreteModel()
 
-    # 状态变量 x_p表示密度  x_q表示流量  x_c表示速度
+    # 状态变量 x_p表示密度  x_q表示流量  x_v表示速度
     # x_p_e表示末尾的密度 x_v_o表示开头的速度 x_q_o表示开头的流量 x_w_r表示匝道排队长度 x_w_r_over表示匝道排队过长惩罚
     model.x_p = pyo.Var(range(NUM_SEGMENT), range(NP + 1), domain=pyo.NonNegativeReals)
     model.x_q = pyo.Var(range(NUM_SEGMENT), range(NP + 1), domain=pyo.NonNegativeReals)
@@ -24,15 +25,15 @@ def mpc_model():
     # model.a_b = pyo.Var(range(NP), domain=pyo.Binary, initialize=1)
     # model.a_q_o = pyo.Var(range(NP), domain=pyo.NonNegativeReals)
 
-    # 决策变量
+    # 决策变量 匝道流量
     model.x_q_r = pyo.Var(range(NP_C), domain=pyo.NonNegativeReals)
     # model.x_q_o = pyo.Var(range(NP_C), domain=pyo.NonNegativeReals)
 
-    # 参数
+    # 参数 分别为 入口流量需求 匝道流量需求 末端密度
     model.p_d_o = pyo.Param(range(NP), domain=pyo.NonNegativeReals, initialize=0, mutable=True)
     model.p_d_r = pyo.Param(range(NP), domain=pyo.NonNegativeReals, initialize=0, mutable=True)
     model.p_p_e = pyo.Param(range(NP), domain=pyo.NonNegativeReals, initialize=0, mutable=True)
-    # 参数-初始状态
+    # 参数-初始状态 密度 流量 速度 匝道排队长度
     model.p_q = pyo.Param(range(NUM_SEGMENT), domain=pyo.NonNegativeReals, initialize=0, mutable=True)
     model.p_p = pyo.Param(range(NUM_SEGMENT), domain=pyo.NonNegativeReals, initialize=0, mutable=True)
     model.p_v = pyo.Param(range(NUM_SEGMENT), domain=pyo.NonNegativeReals, initialize=0, mutable=True)
@@ -50,14 +51,14 @@ def mpc_model():
     model.c_init_x_w_r = pyo.Constraint(rule=constraint_init_x_w_r)
     # model.c_init_x_w_o = pyo.Constraint(rule=constraint_init_x_w_o)
 
-    # 状态量计算等式
+    # 状态量计算等式 密度 流量 速度 匝道排队长度
     model.c_cal_q = pyo.Constraint(range(NUM_SEGMENT), range(1, NP + 1), rule=constraint_cal_q)
     model.c_cal_p = pyo.Constraint(range(NUM_SEGMENT), range(1, NP + 1), rule=constraint_cal_p)
     model.c_cal_v = pyo.Constraint(range(NUM_SEGMENT), range(1, NP + 1), rule=constraint_cal_v)
     model.c_cal_w_r = pyo.Constraint(range(1, NP + 1), rule=constraint_cal_w_r)
     # model.c_cal_w_o = pyo.Constraint(range(1, NP + 1), rule=constraint_cal_w_o)
 
-    # 状态量计算不等式
+    # 状态量计算不等式 匝道流量三个最大值
     model.c_cal_r_q = pyo.Constraint(range(NP), rule=constraint_cal_q_r)
     model.c_cal_r_q_c = pyo.Constraint(range(NP), rule=constraint_cal_r_q_c_max)
     model.c_cal_r_q_capacity = pyo.Constraint(range(NP), rule=constraint_cal_r_q_c)
@@ -65,8 +66,7 @@ def mpc_model():
     # model.c_cal_r_o_c = pyo.Constraint(range(NP), rule=constraint_cal_r_o_c_max)
     # model.c_cal_r_o_capacity = pyo.Constraint(range(NP), rule=constraint_cal_r_o_c)
 
-    # 边界量计算等式
-    # 开头的流量等于需求
+    # 边界量计算等式 入口流量 入口速度 末端密度
     model.c_init_q_o = pyo.Constraint(range(NP), rule=constraint_cal_q_o)
     model.c_cal_x_v_o = pyo.Constraint(range(NP), rule=constraint_cal_x_v_o)
     model.c_cal_x_p_e = pyo.Constraint(range(NP), rule=constraint_cal_x_p_e)
@@ -76,7 +76,7 @@ def mpc_model():
     model.c_aux_delta_2 = pyo.Constraint(range(NUM_SEGMENT), range(NP), rule=constraint_aux_delta_2)
 
     # 超长队伍约束条件
-    model.c_cal_x_w_r_over = pyo.Constraint(range(1, NP + 1), rule=constraint_cal_x_w_r_over)
+    model.c_cal_x_w_r_over = pyo.Constraint(range(NP + 1), rule=constraint_cal_x_w_r_over)
     # model.c_cal_x_w_o_over = pyo.Constraint(range(1, NP + 1), rule=constraint_cal_x_w_o_over)
 
     # 返回模型
@@ -87,25 +87,31 @@ def mpc_model():
 def change_NP2NC_r(id_NP):
     return math.floor(id_NP / M)
 
-# 目标函数
+
+# 目标函数 在途车辆旅行时间 匝道排队旅行时间 匝道排队过长惩罚
 def obj_rule(model):
-    return T * L * LAMBDA * sum(model.x_p[id_segment, k] for id_segment in range(NUM_SEGMENT) for k in
-                                range(1, NP + 1)) \
+    return T * L * LAMBDA * sum(model.x_p[id_segment, k] for id_segment in range(NUM_SEGMENT) for k in range(1, NP + 1)) \
         + T * sum(model.x_w_r[k] for k in range(1, NP + 1)) \
         + XI_W * sum(model.x_w_r_over[k] for k in range(1, NP + 1))
-        # + T * sum(model.x_w_o[k] for k in range(1, NP + 1)) \
-        # + XI_W * sum(model.x_w_o_over[k] for k in range(1, NP + 1)) \
-        # + XI * sum(((model.x_q_r[k + 1] - model.x_q_r[k]) / CAPACITY_ONRAMP) ^ 2 for k in range(NP_C - 1)) \
-        # + XI * sum(((model.x_q_o[k + 1] - model.x_q_o[k]) / CAPACITY_ORIGIN) ^ 2 for k in range(NP_C - 1)) \
-        # 约束条件
+    # + T * sum(model.x_w_o[k] for k in range(1, NP + 1)) \
+    # + XI_W * sum(model.x_w_o_over[k] for k in range(1, NP + 1)) \
+    # + XI * sum(((model.x_q_r[k + 1] - model.x_q_r[k]) / CAPACITY_ONRAMP) ^ 2 for k in range(NP_C - 1)) \
+    # + XI * sum(((model.x_q_o[k + 1] - model.x_q_o[k]) / CAPACITY_ORIGIN) ^ 2 for k in range(NP_C - 1)) \
+    # 约束条件
 
 
 def constraint_init_x_p(model, id_segment):
     return model.x_p[id_segment, 0] == model.p_p[id_segment]
+
+
 def constraint_init_x_q(model, id_segment):
     return model.x_q[id_segment, 0] == model.p_q[id_segment]
+
+
 def constraint_init_x_v(model, id_segment):
     return model.x_v[id_segment, 0] == model.p_v[id_segment]
+
+
 def constraint_init_x_w_r(model):
     return model.x_w_r[0] == model.p_w_r
 
@@ -115,10 +121,12 @@ def constraint_init_x_w_r(model):
 
 def constraint_cal_q(model, id_segment, k):
     return model.x_q[id_segment, k] == LAMBDA * model.x_p[id_segment, k] * model.x_v[id_segment, k]
+
+
 def constraint_cal_p(model, id_segment, k):
     if id_segment == 0:
         expr = model.x_p[id_segment, k] == model.x_p[id_segment, k - 1] + T / (L * LAMBDA) * (
-                model.x_q_o[change_NP2NC_r(k - 1)] - model.x_q[id_segment, k - 1])
+                model.x_q_o[k - 1] - model.x_q[id_segment, k - 1])
     elif id_segment == ID_ONRAMP:
         expr = model.x_p[id_segment, k] == model.x_p[id_segment, k - 1] + T / (L * LAMBDA) * (
                 model.x_q[id_segment - 1, k - 1] - model.x_q[id_segment, k - 1] + model.x_q_r[change_NP2NC_r(k - 1)])
@@ -126,6 +134,7 @@ def constraint_cal_p(model, id_segment, k):
         expr = model.x_p[id_segment, k] == model.x_p[id_segment, k - 1] + T / (L * LAMBDA) * (
                 model.x_q[id_segment - 1, k - 1] - model.x_q[id_segment, k - 1])
     return expr
+
 
 def constraint_cal_v(model, id_segment, k):
     if id_segment == 0:
@@ -158,15 +167,24 @@ def constraint_cal_v(model, id_segment, k):
 
 def constraint_cal_x_v_o(model, k):
     return model.x_v_o[k] == model.x_v[0, k]
+
+
 def constraint_cal_x_p_e(model, k):
     return model.x_p_e[k] == model.p_p_e[k]
+
+
 def constraint_cal_q_o(model, k):
     return model.x_q_o[k] == model.p_d_o[k]
 
+
 def constraint_aux_delta_1(model, id_segment, k):
     return model.x_p[id_segment, k] - PWA_MID <= PWA_MAX * (1 - model.a_delta[id_segment, k])
+
+
 def constraint_aux_delta_2(model, id_segment, k):
     return model.x_p[id_segment, k] - PWA_MID >= PWA_EPSILON + (PWA_MIN - PWA_EPSILON) * model.a_delta[id_segment, k]
+
+
 # def constraint_cal_w_o(model, k):
 #     expr = model.x_w_o[k] == model.x_w_o[k - 1] + T * (model.p_d_o[k - 1] - model.x_q_o[change_NP2NC_r(k - 1)])
 #     return expr
@@ -174,6 +192,8 @@ def constraint_aux_delta_2(model, id_segment, k):
 def constraint_cal_w_r(model, k):
     expr = model.x_w_r[k] == model.x_w_r[k - 1] + T * (model.p_d_r[k - 1] - model.x_q_r[change_NP2NC_r(k - 1)])
     return expr
+
+
 # def constraint_cal_r_o(model, k):
 #     return model.x_q_o[change_NP2NC_r(k)] == model.p_d_o[k] + model.x_w_o[k] / T
 # def constraint_cal_r_o_c_max(model, k):
@@ -184,9 +204,13 @@ def constraint_cal_w_r(model, k):
 
 def constraint_cal_q_r(model, k):
     return model.x_q_r[change_NP2NC_r(k)] <= model.p_d_r[k] + model.x_w_r[k] / T
+
+
 def constraint_cal_r_q_c(model, k):
     return model.x_q_r[change_NP2NC_r(k)] <= CAPACITY_ONRAMP * (DENSITY_MAX - model.x_p[ID_ONRAMP, k]) / (
             DENSITY_MAX - DENSITY_CRIT)
+
+
 def constraint_cal_r_q_c_max(model, k):
     return model.x_q_r[change_NP2NC_r(k)] <= CAPACITY_ONRAMP
 
@@ -195,4 +219,3 @@ def constraint_cal_r_q_c_max(model, k):
 #     return model.x_w_o[k] - QUEUE_MAX <= model.x_w_o_over[k]
 def constraint_cal_x_w_r_over(model, k):
     return model.x_w_r[k] - QUEUE_MAX <= model.x_w_r_over[k]
-
